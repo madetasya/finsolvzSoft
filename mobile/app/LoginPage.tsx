@@ -20,7 +20,6 @@ import { RootStackParamList } from "../types";
 
 const API_URL = "http://159.89.194.251";
 
-
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

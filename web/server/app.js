@@ -11,7 +11,7 @@ import userController from "./controllers/userController.js";
 const app = express();
 
 database();
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
