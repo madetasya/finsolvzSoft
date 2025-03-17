@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "finsolvz",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/image/FinsolvzLogo.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/image/FinsolvzLogo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "finsolvz.beta",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/image/logoFinsolvz.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "finsolvz.beta"
+    },
+    "web": {
+      "favicon": "./assets/image/FinsolvzLogo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "828f1f1d-e595-4d76-bd82-43c7b4f8b4ff",
+        "EXPO_PUBLIC_API_URL": "http://159.89.194.251"
+      }
+    },
+
+    "plugins": ["expo-secure-store"]
+  }
+}
