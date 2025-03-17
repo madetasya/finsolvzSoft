@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
 import LogoDark from "../assets/FinsolvzLogoDark.png";
+import backgroundImage from "../assets/backgroundWeb.jpg";
+import loginCardImage from "../assets/LoginCard.png";
 
-const API_URL = import.meta.env.VITE_API_URL 
+const API_URL = import.meta.env.VITE_API_URL
 
 const Container = styled.div`
   width: 100vw;
@@ -12,42 +14,43 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(180deg, #041417 42.5%, #083339);
+  background: url(${backgroundImage}) no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+  user-select: none;
 `;
-
 const Card = styled.div`
   width: 400px;
-  padding: 32px;
-  background: rgba(248, 248, 248, 0.92);
+  height: 500px;
+  background: url(${loginCardImage}) no-repeat center center;
+  background-size: contain;
   border-radius: 16px;
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
 `;
 
 const Logo = styled.img`
-  width: 140px;
-  margin-bottom: 12px;
+  width: 168px;
+  margin-top: 42px;
+  margin-right: 64px
 `;
 
 const Subtitle = styled.p`
-  font-size: 16px;
+  font-size: 14px;
   color: #333;
-  margin-bottom: 24px;
-
-  b {
-    font-weight: bold;
-  }
-
-  span {
-    color: #4aa5a5;
-    font-weight: bold;
-  }
+  margin-right: 56px;
+  margin-top: 4px;
+  font-weight: bold;
 `;
 
 const InputContainer = styled.div`
-  width: 100%;
+  width: 80%;
+  margin-right: 96px;
   text-align: left;
-  margin-bottom: 16px;
+  margin-bottom: -2px;
 `;
 
 const Label = styled.label`
@@ -55,6 +58,7 @@ const Label = styled.label`
   font-weight: bold;
   color: #333;
   display: block;
+  margin-top: 16px;
   margin-bottom: 4px;
 `;
 
@@ -76,14 +80,15 @@ const Input = styled.input.withConfig({
 `;
 
 const Button = styled.button`
-  width: 100%;
+  width: 86%;
   padding: 12px;
   background: #083339;
   color: white;
+  margin-right: 72px;
   font-weight: bold;
   border: none;
   border-radius: 8px;
-  margin-top: 16px;
+  margin-top: 24px;
   cursor: pointer;
 
   &:hover {
@@ -94,7 +99,8 @@ const Button = styled.button`
 const ForgotPassword = styled.p`
   font-size: 12px;
   color: #666;
-  margin-top: 12px;
+  margin-top: 4px;
+  margin-right: 304px;
   cursor: pointer;
   text-decoration: underline;
 
@@ -105,43 +111,57 @@ const ForgotPassword = styled.p`
 
 const Modal = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
+
 `;
 
 const ModalContent = styled.div`
+  margin-right: 72px;
+  margin-top: 80px;
   background: white;
   padding: 24px;
   border-radius: 10px;
   text-align: left;
   width: 320px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.8);
+`;
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px); /* Blur effect */
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const ModalTitle = styled.h3`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   margin-bottom: 12px;
+  color: #061616
 `;
 
 const ModalInput = styled(Input)`
-  text-align: center;
+  text-align: left;
+  width: 90%
 `;
 
 const CloseButton = styled.button`
-  width: 100%;
-  padding: 8px;
+  width: 86%;
   border: none;
-  background: #ff3b30;
+  background: #90151B;
   color: white;
   border-radius: 6px;
-  margin-top: 10px;
+  margin-top: 8px;
   cursor: pointer;
 
   &:hover {
@@ -150,7 +170,7 @@ const CloseButton = styled.button`
 `;
 
 const Login: React.FC = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -163,7 +183,7 @@ const Login: React.FC = () => {
       const response = await axios.post(`${API_URL}/login`, { email, password });
       localStorage.setItem("token", response.data.access_token);
       alert("Login berhasil!");
-      navigate("/report-input"); 
+      navigate("/report-input");
     } catch {
       throw new Error("Login failed");
     }
@@ -183,35 +203,36 @@ const Login: React.FC = () => {
       <Card>
         <Logo src={LogoDark} alt="Finsolvz Logo" />
         <Subtitle>
-          Satu langkah{" "}
-          <b>
-            untuk <span>data</span> yang tertata
-          </b>
+          Please login to your account.
         </Subtitle>
 
         <InputContainer>
           <Label>E-mail</Label>
-          <Input type="email" placeholder="Masukkan email" inputcolor="#EAEAEA" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input type="email" placeholder="Enter your email" inputcolor="#EAEAEA" value={email} onChange={(e) => setEmail(e.target.value)} />
         </InputContainer>
 
         <InputContainer>
           <Label>Password</Label>
-          <Input type="password" placeholder="Masukkan password" inputcolor="#EAEAEA" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input type="password" placeholder="Enter your password" inputcolor="#EAEAEA" value={password} onChange={(e) => setPassword(e.target.value)} />
         </InputContainer>
 
         <Button onClick={handleLogin}>LOGIN</Button>
-        <ForgotPassword onClick={() => setShowModal(true)}>forgot password</ForgotPassword>
+        <ForgotPassword onClick={() => setShowModal(true)}>Forgot password</ForgotPassword>
       </Card>
 
       {showModal && (
         <Modal>
-          <ModalContent>
-            <ModalTitle>Reset Password</ModalTitle>
-            <ModalInput type="email" placeholder="Masukkan email Anda" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
-            <Button onClick={handleForgotPassword}>Send OTP</Button>
-            {resetMessage && <p>{resetMessage}</p>}
-            <CloseButton onClick={() => setShowModal(false)}>Close</CloseButton>
-          </ModalContent>
+          <ModalOverlay onClick={() => setShowModal(false)}>
+
+            <ModalContent>
+              <ModalTitle>Reset Password</ModalTitle>
+              <ModalInput type="email" placeholder="Enter your email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
+              <Button onClick={handleForgotPassword}>Send OTP</Button>
+              {resetMessage && <p>{resetMessage}</p>}
+              <CloseButton onClick={() => setShowModal(false)}>Close</CloseButton>
+            </ModalContent>
+          </ModalOverlay>
+
         </Modal>
       )}
     </Container>
