@@ -11,7 +11,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
-  const [reportType, setReportType] = useState<string | null>(null);
+  const [reportType, setReportType] = useState<string[] | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,10 +39,13 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     fetchUserData();
   }, []);
-  const handleFilterChange = (company: string | null, type: string | null) => {
+  const handleFilterChange = (company: string | null, type: string[] | null) => {
     setSelectedCompany(company);
     setReportType(type);
   };
+
+
+
 
   const handleLogout = async () => {
     try {
@@ -53,15 +56,15 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
-  const handleReportNavigation = () => {
-    if (!selectedCompany || !reportType) return;
+  // const handleReportNavigation = () => {
+  //   if (!selectedCompany || !reportType) return;
 
-    if (reportType === "Revenue") {
-      navigation.navigate("Revenue", { companyId: selectedCompany, reportType });
-    } else {
-      navigation.navigate("BSPL", { companyId: selectedCompany, reportType });
-    }
-  };
+  //   if (reportType === "Revenue") {
+  //     navigation.navigate("Revenue", { companyId: selectedCompany, reportType });
+  //   } else {
+  //     navigation.navigate("BSPL", { companyId: selectedCompany, reportType });
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
@@ -94,6 +97,8 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       <View style={{ marginTop: 32 }}>
         <ReportFilter onFilterChange={handleFilterChange} />
+
+==
         {/* <TouchableOpacity style={styles.button} onPress={handleReportNavigation}>
           <Text style={styles.buttonText}>View Report</Text>
         </TouchableOpacity> */}

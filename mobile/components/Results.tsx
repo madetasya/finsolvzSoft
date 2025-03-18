@@ -17,8 +17,9 @@ const { width } = Dimensions.get("window");
 
 interface ResultsPageProps {
   selectedCompany: string | null;
-  reportType: string | null;
+  reportType: string[] | null;
 }
+
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -82,9 +83,9 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany }) => {
           >
             <View style={styles.resultContent}>
               <Text style={styles.resultTitle}>{item.reportName}</Text>
-              <Text style={styles.resultSubtitle}>{item.reportType?.name || "Unknown Type"}</Text>
+              {/* <Text style={styles.resultSubtitle}>{item.reportType?.name || "Unknown Type"}</Text>
               <Text style={styles.resultDate}>{item.year}</Text>
-              <Text style={styles.resultDate}>{new Date(item.updatedAt).toLocaleDateString()}</Text>
+              <Text style={styles.resultDate}>{new Date(item.updatedAt).toLocaleDateString()}</Text> */}
             </View>
           </TouchableOpacity>
         )}

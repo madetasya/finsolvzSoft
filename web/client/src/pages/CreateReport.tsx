@@ -5,6 +5,23 @@ import axios from "axios";
 import Table from "../components/Table";
 import ReportDetailCard from "../components/ReportDetailCard";
 
+// Impor gambar background
+import backgroundImage from "../assets/backgroundWeb.jpg";
+
+const Container = styled.div`
+  background: url(${backgroundImage}) no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+  user-select: none;
+  width: 100vw;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
 const Button = styled.button`
   background-color: transparent;
   color: white;
@@ -13,7 +30,7 @@ const Button = styled.button`
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
-  margin-right: 10px;
+  margin-top: 20px;
 `;
 
 const FileInput = styled.input`
@@ -33,7 +50,9 @@ const Label = styled.label`
     color: #fff;
   }
 `;
+
 const API_URL = import.meta.env.VITE_API_URL;
+
 const CreateReport: React.FC = () => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [tableData, setTableData] = useState<Record<string, string | number>[]>([]);
@@ -106,9 +125,8 @@ const CreateReport: React.FC = () => {
         console.log("🚀 Payload yang dikirim ke backend:", JSON.stringify(payload, null, 2));
 
         try {
-         
             const response = await axios.post(`${API_URL}/reports`, payload, {
-            headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `Bearer ${token}` },
             });
 
             console.log("✅ Report created successfully:", response.data);
@@ -124,21 +142,19 @@ const CreateReport: React.FC = () => {
         }
     };
 
-
     return (
-        <div>
+        <Container>
             <h1>Create Report</h1>
             <ReportDetailCard onDataChange={setReportDetails} />
+
             <Label htmlFor="file-upload">Upload Excel</Label>
             <FileInput id="file-upload" type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
             {fileName && <p>Uploaded file: {fileName}</p>}
-            <Table
-                data={tableData}
-                onCategoryDataChange={setCategoryData}
-                onMonthDataChange={setMonthData}
-            />
+
+            <Table data={tableData} onCategoryDataChange={setCategoryData} onMonthDataChange={setMonthData} />
+
             <Button onClick={handleSubmit}>Save Report</Button>
-        </div>
+        </Container>
     );
 };
 

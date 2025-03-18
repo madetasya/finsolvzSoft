@@ -14,7 +14,7 @@ import axios from "axios";
 const { width } = Dimensions.get("window");
 
 interface ReportFilterProps {
-  onFilterChange: (company: string | null, type: string | null) => void;
+  onFilterChange: (company: string | null, type: string[] | null) => void;
 }
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -23,11 +23,12 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companyList, setCompanyList] = useState<{ _id: string; name: string }[]>([]);
+  const [reportTypes, setReportTypes] = useState<{ _id: string; name: string }[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
-  /** 🔥 Fetch user-specific companies */
   const fetchCompanies = async () => {
     try {
       setLoading(true);
@@ -45,10 +46,33 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
       if (response.data.length > 0) {
         const defaultCompany = response.data[0]._id;
         setSelectedCompany(defaultCompany);
-        onFilterChange(defaultCompany, null);
+        onFilterChange(defaultCompany, []);
       }
     } catch (error) {
       console.error("Error fetching companies:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+const fetchReportTypes = async (companyId: string) => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/reports/company/${companyId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const uniqueReportTypes = Array.from(
+        new Set(response.data.map((report: any) => report.reportType.name))
+      ).map((name) => {
+        return response.data.find((report: any) => report.reportType.name === name).reportType;
+      });
+
+      setReportTypes(uniqueReportTypes);
+    } catch (error) {
+      console.error("Error fetching report types:", error);
     } finally {
       setLoading(false);
     }
@@ -60,8 +84,21 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
 
   const handleCompanySelect = (companyId: string) => {
     setSelectedCompany(companyId);
+    setSelectedTypes([]);
+    fetchReportTypes(companyId);
     setIsOpen(false);
-    onFilterChange(companyId, null);
+    onFilterChange(companyId, []);
+  };
+
+  const toggleReportType = (typeId: string) => {
+    let updatedSelectedTypes;
+    if (selectedTypes.includes(typeId)) {
+      updatedSelectedTypes = selectedTypes.filter((id) => id !== typeId);
+    } else {
+      updatedSelectedTypes = [...selectedTypes, typeId];
+    }
+    setSelectedTypes(updatedSelectedTypes);
+    onFilterChange(selectedCompany, updatedSelectedTypes);
   };
 
   return (
@@ -79,6 +116,8 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
             </Text>
           )}
         </TouchableOpacity>
+
+        <Text style={styles.chooseText}>Choose Report Type</Text>
         {isOpen && !loading && (
           <View style={styles.dropdownContainer}>
             <FlatList
@@ -106,14 +145,40 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
           </View>
         )}
       </View>
+      <View style={styles.buttonContainer}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#253d3d" />
+        ) : (
+          reportTypes.slice(0, 3).map((reportType) => (
+            <TouchableOpacity
+              key={reportType._id}
+              style={[
+                styles.button,
+                selectedTypes.includes(reportType._id) && styles.buttonSelected,
+              ]}
+              onPress={() => toggleReportType(reportType._id)}
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  selectedTypes.includes(reportType._id) && styles.buttonTextSelected,
+                ]}
+              >
+                {reportType.name}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   filterContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
     borderRadius: 32,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
@@ -125,10 +190,10 @@ const styles = StyleSheet.create({
     paddingLeft: 24,
     fontWeight: "bold",
     color: "#F4F4F4",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   filterContainerOpen: {
-    flex: -2,
+    flex: -1,
   },
   dropdownContainers: {
     marginBottom: 24,
@@ -136,6 +201,7 @@ const styles = StyleSheet.create({
     width: width * 0.9,
   },
   dropdown: {
+    marginBottom: 24,
     marginHorizontal: 16,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -149,7 +215,7 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     marginHorizontal: 16,
-    marginTop: 80,
+    marginTop: 72,
     position: "absolute",
     width: width * 0.82,
     zIndex: 2,
@@ -170,6 +236,33 @@ const styles = StyleSheet.create({
   },
   dropdownItemTextSelected: {
     color: "#ffffff",
+  },
+  buttonContainer: {
+  marginLeft: 16,
+  },
+  button: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#fff",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 32,
+    marginHorizontal: 5,
+    marginBottom: 16,
+    marginTop: -24,
+  },
+  buttonSelected: {
+    borderWidth: 0,
+    backgroundColor: "#6c918b",
+   
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  buttonTextSelected: {
+    color: "#fff",
   },
 });
 

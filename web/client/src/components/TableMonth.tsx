@@ -2,10 +2,9 @@ import React, { useRef, useEffect } from "react";
 import styled from "styled-components";
 
 const TableWrapper = styled.div`
-  width: 100%;
+  width: 440px;
   overflow-x: auto;
   position: relative;
-  width: 564px
 ::-webkit-scrollbar {
   display: none;
 }
@@ -140,7 +139,7 @@ const TableMonth: React.FC<TableMonthProps> = ({ tableData, onDataChange }) => {
             <StyledTable>
                 <thead>
                     <tr>
-                        <TableHeader colSpan={12}>Month</TableHeader>
+                        <TableHeader colSpan={12} >Month</TableHeader>
                     </tr>
                 </thead>
             </StyledTable>

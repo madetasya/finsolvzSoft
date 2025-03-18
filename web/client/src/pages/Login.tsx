@@ -33,16 +33,16 @@ const Card = styled.div`
 `;
 
 const Logo = styled.img`
-  width: 168px;
-  margin-top: 42px;
+  width: 200px;
+  margin-top: 32px;
   margin-right: 64px
 `;
 
 const Subtitle = styled.p`
   font-size: 14px;
-  color: #333;
+  color:  #0A6067;
   margin-right: 56px;
-  margin-top: 4px;
+  margin-top: 2px;
   font-weight: bold;
 `;
 
@@ -80,16 +80,17 @@ const Input = styled.input.withConfig({
 `;
 
 const Button = styled.button`
-  width: 86%;
+  width: 56%;
   padding: 12px;
   background: #083339;
   color: white;
   margin-right: 72px;
   font-weight: bold;
   border: none;
-  border-radius: 8px;
-  margin-top: 24px;
+  border-radius: 18px;
+  margin-top: 56px;
   cursor: pointer;
+   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.4);
 
   &:hover {
     background: #06272b;
@@ -100,7 +101,7 @@ const ForgotPassword = styled.p`
   font-size: 12px;
   color: #666;
   margin-top: 4px;
-  margin-right: 304px;
+  margin-right: 72px;
   cursor: pointer;
   text-decoration: underline;
 
@@ -203,7 +204,7 @@ const Login: React.FC = () => {
       <Card>
         <Logo src={LogoDark} alt="Finsolvz Logo" />
         <Subtitle>
-          Please login to your account.
+          Login to your account
         </Subtitle>
 
         <InputContainer>

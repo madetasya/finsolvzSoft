@@ -6,7 +6,12 @@ import TableMonth from "./TableMonth";
 const CombinedTableWrapper = styled.div`
   display: flex;
   border: 1px solid #fff;
-  width: 100%;
+  width: 1590px;
+   ::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
 `;
 
 const CategoryContainer = styled.div`

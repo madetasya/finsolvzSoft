@@ -5,6 +5,11 @@ const TableWrapper = styled.div`
     width: 100%;
   
     border: 1px solid #ccc;
+     ::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE & Edge */
 `;
 
 const StyledTable = styled.table`

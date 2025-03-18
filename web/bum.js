@@ -1,182 +1,248 @@
-// import React, { useState } from "react";
-// import * as XLSX from "xlsx";
-// import styled from "styled-components";
-// import Table from "../components/Table";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-// const baseURL = import.meta.env.VITE_API_URL;
+const { width } = Dimensions.get("window");
 
-// const Container = styled.div`
-//   width: 100vw;
-//   height: 100vh;
-//   padding: 20px;
-//   background: linear-gradient(180deg, #041417 42.5%, #083339);
-//   color: white;
-//   display: flex;
-//   flex-direction: column;
-//   align-items: center;
-//   box-sizing: border-box;
-// `;
+interface ReportFilterProps {
+  onFilterChange: (company: string | null, types: string[]) => void;
+}
 
-// const Header = styled.h2`
-//   font-size: 24px;
-//   margin-bottom: 20px;
-//   color: #4aa5a5;
-//   font-weight: bold;
-// `;
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// const ButtonContainer = styled.div`
-//   display: flex;
-//   flex-wrap: wrap;
-//   gap: 15px;
-//   margin-bottom: 20px;
-//   align-items: center;
-// `;
+const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }) => {
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [companyList, setCompanyList] = useState<{ _id: string; name: string }[]>([]);
+  const [reportTypes, setReportTypes] = useState<{ _id: string; name: string }[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-// const Button = styled.button<{ disabled?: boolean }>`
-//   background: ${({ disabled }) => (disabled ? "#2c3e50" : "#4aa5a5")};
-//   border: none;
-//   padding: 12px 20px;
-//   color: black;
-//   font-weight: bold;
-//   border-radius: 6px;
-//   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-//   transition: 0.3s;
-//   &:hover {
-//     background: ${({ disabled }) => (disabled ? "#2c3e50" : "#3a8c8c")};
-//   }
-// `;
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-// const HiddenInput = styled.input`
-//   display: none;
-// `;
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) return;
 
-// const FileName = styled.span`
-//   color: #4aa5a5;
-//   font-weight: bold;
-// `;
+      const response = await axios.get(`${API_URL}/user/companies`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-// const TableWrapper = styled.div`
-//   width: 80%;
-//   max-width: 900px;
-//   margin-top: 20px;
-// `;
+      setCompanyList(response.data);
+      if (response.data.length > 0) {
+        const defaultCompany = response.data[0]._id;
+        setSelectedCompany(defaultCompany);
+        fetchReportTypes(defaultCompany);
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-// const JSONOutput = styled.pre`
-//   text-align: left;
-//   max-width: 900px;
-//   width: 100%;
-//   background: #1e2a38;
-//   color: #d1d1d1;
-//   padding: 15px;
-//   border-radius: 8px;
-//   margin-top: 20px;
-//   overflow-x: auto;
-//   font-size: 14px;
-// `;
+  const fetchReportTypes = async (companyId: string) => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) return;
 
-// const Input = styled.input<{ $inputColor?: string }>`
-//   width: 100%;
-//   padding: 12px;
-//   border-radius: 8px;
-//   border: 1px solid #ccc;
-//   outline: none;
-//   font-size: 14px;
-//   background-color: ${(props) => props.$inputColor || "#f0f0f0"};
-//   text-align: left;
+      const response = await axios.get(`${API_URL}/reports/company/${companyId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-//   &:focus {
-//     border-color: #4aa5a5;
-//   }
-// `;
+      const uniqueReportTypes = Array.from(
+        new Set(response.data.map((report: any) => report.reportType.name))
+      ).map((name) => {
+        return response.data.find((report: any) => report.reportType.name === name).reportType;
+      });
 
-// const ReportInput: React.FC = () => {
-//   const [tableData, setTableData] = useState<string[][]>(
-//     Array.from({ length: 3 }, () => Array(3).fill(""))
-//   );
+      setReportTypes(uniqueReportTypes);
+    } catch (error) {
+      console.error("Error fetching report types:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-//   const [jsonData, setJsonData] = useState<object | null>(null);
-//   const [inputMethod, setInputMethod] = useState<"manual" | "excel" | null>(null);
-//   const [fileName, setFileName] = useState<string>("");
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
-//   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-//     const file = event.target.files?.[0];
-//     if (!file) return;
+  const handleCompanySelect = (companyId: string) => {
+    setSelectedCompany(companyId);
+    setDropdownOpen(false);
+    setSelectedTypes([]);
+    fetchReportTypes(companyId);
+    onFilterChange(companyId, []);
+  };
 
-//     setFileName(file.name);
+  const toggleReportType = (typeId: string) => {
+    let updatedSelectedTypes;
+    if (selectedTypes.includes(typeId)) {
+      updatedSelectedTypes = selectedTypes.filter((id) => id !== typeId);
+    } else {
+      updatedSelectedTypes = [...selectedTypes, typeId];
+    }
+    setSelectedTypes(updatedSelectedTypes);
+    onFilterChange(selectedCompany, updatedSelectedTypes);
+  };
 
-//     const reader = new FileReader();
-//     reader.onload = (e) => {
-//       const data = new Uint8Array(e.target?.result as ArrayBuffer);
-//       const workbook = XLSX.read(data, { type: "array" });
-//       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-//       const parsedData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  return (
+    <View style={styles.container}>
+      {/* Dropdown Perusahaan */}
+      <View style={styles.dropdownContainer}>
+        <Text style={styles.label}>Choose Company</Text>
+        <TouchableOpacity style={styles.dropdown} onPress={toggleDropdown}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#253d3d" />
+          ) : (
+            <Text style={styles.dropdownText}>
+              {selectedCompany
+                ? companyList.find((c) => c._id === selectedCompany)?.name
+                : "Select Company"}
+            </Text>
+          )}
+        </TouchableOpacity>
 
-//       setTableData(parsedData);
-//       setInputMethod("excel");
-//     };
-//     reader.readAsArrayBuffer(file);
-//   };
+        {dropdownOpen && !loading && (
+          <View style={styles.dropdownList}>
+            <FlatList
+              data={companyList}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownItem,
+                    selectedCompany === item._id && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => handleCompanySelect(item._id)}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      selectedCompany === item._id && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
+      </View>
 
-//   const handleProcessData = async () => {
-//     if (!tableData || tableData.length === 0) {
-//       alert("No data to process!");
-//       return;
-//     }
+      {/* Tombol Filter Report Type */}
+      <View style={styles.buttonContainer}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#253d3d" />
+        ) : (
+          reportTypes.slice(0, 3).map((reportType) => (
+            <TouchableOpacity
+              key={reportType._id}
+              style={[
+                styles.button,
+                selectedTypes.includes(reportType._id) && styles.buttonSelected,
+              ]}
+              onPress={() => toggleReportType(reportType._id)}
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  selectedTypes.includes(reportType._id) && styles.buttonTextSelected,
+                ]}
+              >
+                {reportType.name}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
+    </View>
+  );
+};
 
-//     console.log("📨 Sending rawJson:", { rawJson: tableData });
+const styles = StyleSheet.create({
+  container: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  dropdownContainer: {
+    marginBottom: 16,
+    width: width * 0.9,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#F4F4F4",
+    marginBottom: 8,
+  },
+  dropdown: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+  },
+  dropdownText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#253d3d",
+  },
+  dropdownList: {
+    marginTop: 10,
+    borderRadius: 10,
+    backgroundColor: "rgba(240, 240, 240, 1)",
+    padding: 8,
+  },
+  dropdownItem: {
+    padding: 10,
+  },
+  dropdownItemSelected: {
+    backgroundColor: "#253d3d",
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: "#253d3d",
+  },
+  dropdownItemTextSelected: {
+    color: "#ffffff",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  button: {
+    backgroundColor: "#253d3d",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 5,
+  },
+  buttonSelected: {
+    backgroundColor: "#6c918b",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  buttonTextSelected: {
+    color: "#253d3d",
+  },
+});
 
-//     try {
-//       const response = await fetch(`${baseURL}/gemini`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${localStorage.getItem("token")}` // Ensure token is added if needed
-//         },
-//         body: JSON.stringify({ rawJson: tableData }),
-//       });
-
-//       if (!response.ok) {
-//         const errorData = await response.json();
-//         console.error("❌ Server Error:", errorData);
-//         throw new Error(`Server Error: ${response.status} ${response.statusText}`);
-//       }
-
-//       const data = await response.json();
-//       console.log("✅ Processed Data:", data);
-//       setJsonData(data);
-//       alert("Data processed successfully!");
-//     } catch (error) {
-//       console.error("❌ Error processing data:", error);
-//       alert("Failed to process data.");
-//     }
-//   };
-
-//   return (
-//     <Container>
-//       <Header>📊 Report Data Input</Header>
-
-//       <ButtonContainer>
-//         <HiddenInput type="file" accept=".xlsx" id="fileUpload" onChange={handleFileUpload} />
-//         <Button onClick={() => document.getElementById("fileUpload")?.click()} disabled={inputMethod === "manual"}>
-//           📂 Scan Excel File
-//         </Button>
-//         {fileName && <FileName>{fileName}</FileName>}
-//         <Button onClick={() => setInputMethod("manual")} disabled={inputMethod === "excel"}>
-//           ✏️ Input Manually
-//         </Button>
-//       </ButtonContainer>
-
-//       {inputMethod === "manual" && (
-//         <TableWrapper>
-//           <Table tableData={tableData} setTableData={setTableData} />
-//         </TableWrapper>
-//       )}
-
-//       <Button onClick={handleProcessData}>🚀 Process Data & Send to Gemini</Button>
-
-//       {jsonData && <JSONOutput>{JSON.stringify(jsonData, null, 2)}</JSONOutput>}
-//     </Container>
-//   );
-// };
-
-// export default ReportInput;
+export default ReportFilter;

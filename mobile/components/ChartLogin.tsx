@@ -35,16 +35,16 @@ const InfiniteScrollingChart: React.FC = () => {
     const scrollContainer = scrollViewRef.current;
     let interval: NodeJS.Timeout;
 
-    //ROLLING BAR
     if (scrollContainer) {
       interval = setInterval(() => {
-        positionX.current += 0.3; 
+        positionX.current += 0.3; // Scroll speed
         scrollContainer.scrollTo({ x: positionX.current, animated: false });
 
         if (positionX.current >= bars.length * intervalSpeed) {
-          positionX.current = 9;
+          positionX.current = 0; // Reset the scroll to the start
         }
-    // BAR HEIGHT
+
+        // Update bar heights with random direction
         setBars((prevBars) =>
           prevBars.map((bar) => {
             let newHeight = bar.height + bar.direction * 0.3;
@@ -58,7 +58,7 @@ const InfiniteScrollingChart: React.FC = () => {
     }
 
     return () => {
-      clearInterval(interval); 
+      clearInterval(interval);
     };
   }, [bars]);
 
@@ -88,9 +88,9 @@ const InfiniteScrollingChart: React.FC = () => {
           ))}
           <Defs>
             <LinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-
-              <Stop offset="1" stopColor="#6fb591" stopOpacity="-1" />
-              <Stop offset="2" stopColor="#000000" stopOpacity="-1" />
+              <Stop offset="0" stopColor="#16746C" stopOpacity="1" />
+              <Stop offset="1" stopColor="#488D80" stopOpacity="-1" />
+              <Stop offset="2" stopColor="#000000" stopOpacity="-2" />
             </LinearGradient>
           </Defs>
         </Svg>
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     alignItems: "center",
-    paddingHorizontal: screenWidth / 10, 
+    paddingHorizontal: screenWidth / 10, // Adjust padding for centering
   },
 });
 

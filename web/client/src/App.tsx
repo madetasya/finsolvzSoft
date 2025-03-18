@@ -11,7 +11,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/report-input" element={<CreateReport />} />
-        <Route path="/report-detail" element={<ReportDetailCard />} /> 
+        <Route path="/report-detail" element={<ReportDetailCard onDataChange={(data) => console.log(data)} />} /> 
       </Routes>
     </Router>
   );

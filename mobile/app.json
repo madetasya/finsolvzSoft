@@ -36,9 +36,7 @@
         "EXPO_PUBLIC_API_URL": "http://159.89.194.251"
       }
     },
-    "plugins": [
-      "expo-secure-store"
-    ],
+    "plugins": ["expo-secure-store", "expo-video"],
     "owner": "madetasya"
   }
 }
