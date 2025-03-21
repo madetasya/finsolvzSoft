@@ -5,22 +5,24 @@ const companySchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true],
-      trim: true
+      trim: true,
     },
     profilePicture: {
       type: String,
       default: null,
-      required: [false]
+      required: [false],
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [false]
-    }
+    user: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: false,
+      },
+    ],
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 

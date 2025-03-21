@@ -19,7 +19,7 @@ router.use(authentication);
 router.post("/register", userController.register);
 router.post("/logout", userController.logout);
 router.put("/updateRole", userController.updateRole);
-router.put("/updateUser", userController.updateUser);
+router.put("/updateUser:id", userController.updateUser);
 router.get("/users/:name", userController.getUserByName);
 router.get("/users/:id", userController.getUserById);
 router.delete("/users/:id", userController.deleteUser);

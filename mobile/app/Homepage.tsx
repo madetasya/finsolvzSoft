@@ -98,11 +98,6 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       <View style={{ marginTop: 32 }}>
         <ReportFilter onFilterChange={handleFilterChange} />
 
-==
-        {/* <TouchableOpacity style={styles.button} onPress={handleReportNavigation}>
-          <Text style={styles.buttonText}>View Report</Text>
-        </TouchableOpacity> */}
-
         <ResultsPage
           selectedCompany={selectedCompany}
           reportType={reportType}

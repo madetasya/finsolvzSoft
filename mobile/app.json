@@ -32,11 +32,13 @@
     },
     "extra": {
       "eas": {
-        "projectId": "828f1f1d-e595-4d76-bd82-43c7b4f8b4ff",
-        "EXPO_PUBLIC_API_URL": "http://159.89.194.251"
+        "projectId": "8d732c17-06ab-40ae-b834-8d798cf2bd27",
+          "EXPO_PUBLIC_API_URL": "http://159.89.194.251"
       }
     },
-    "plugins": ["expo-secure-store", "expo-video"],
-    "owner": "madetasya"
+    "plugins": [
+      "expo-secure-store",
+      "expo-video"
+    ]
   }
 }
