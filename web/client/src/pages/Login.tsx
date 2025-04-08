@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
-import backgroundImage from "../assets/backgroundLogin.png";
+// import backgroundImage from "../assets/backgroundLogin.png";
 import ButtonLoginAct from "../assets/ButtonLoginAct.png";
 import ButtonLoginInact from "../assets/ButtonLogin.png";
-import FinsolvzLogoBright from "../assets/FinsolvzLogoBright.png";
+import FinsolvzLogoBright from "../assets/LogoHorizontal.png";
 // import loginCardImage from "../assets/LoginCard.png";
 import "../styles/font.css"
 
@@ -17,10 +17,8 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url(${backgroundImage}) no-repeat center center;
+background: linear-gradient(0deg, #041012 0%, #041012 100%), linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%), linear-gradient(303deg, rgba(7, 23, 23, 0.00) 2.29%, rgba(38, 125, 125, 0.16) 66.11%), #041417;
   background-size: cover;
-  overflow: hidden;
-  user-select: none;
 `;
 
 const Card = styled.div`
@@ -49,13 +47,10 @@ const Input = styled.input`
   text-align: left;
   outline: none;
   font-style: italic;
-  background: transparent;
-  background: linear-gradient(45deg, rgb(78, 60, 41), rgb(178, 143, 66), rgb(78, 60, 41), rgb(191, 128, 65), rgb(191, 128, 65));
-  -webkit-background-clip: text;
+  background: linear-gradient(45deg, #ffcc00, #ff6600, #cc00ff);
   background-clip: text;
-  color: rgba(199, 149, 63,0.5);
-  -webkit-text-stroke: 0.3px rgba(255, 181, 71, 0.38);
-  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.17);
+  -webkit-background-clip: text;
+  color: transparent;
 
   &::placeholder {
     color:rgba(199, 149, 63,0.5);
@@ -220,6 +215,7 @@ const Login: React.FC = () => {
     <Container>
       <Card>
         <Logo src={FinsolvzLogoBright} alt="Finsolvz Logo" />
+
         <InputContainer>
           <Input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />

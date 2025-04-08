@@ -56,15 +56,36 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
-  // const handleReportNavigation = () => {
-  //   if (!selectedCompany || !reportType) return;
+  const handleReportNavigation = async () => {
+    if (!selectedCompany || !reportType || reportType.length === 0) return;
 
-  //   if (reportType === "Revenue") {
-  //     navigation.navigate("Revenue", { companyId: selectedCompany, reportType });
-  //   } else {
-  //     navigation.navigate("BSPL", { companyId: selectedCompany, reportType });
-  //   }
-  // };
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+
+      const response = await axios.get(`${API_URL}/reports/company/${selectedCompany}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const reports = response.data;
+      let foundReport = null;
+
+      for (let i = 0; i < reports.length; i++) {
+        if (reportType.includes(reports[i].reportType.name)) {
+          foundReport = reports[i];
+          break;
+        }
+      }
+
+      if (foundReport && foundReport._id) {
+        navigation.navigate("Report", { reportId: foundReport._id });
+      } else {
+        console.error("Can't find this specific report");
+      }
+    } catch (error) {
+      console.error("sumthinc wong===>", error);
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -102,6 +123,10 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
           selectedCompany={selectedCompany}
           reportType={reportType}
         />
+        <TouchableOpacity style={styles.button} onPress={handleReportNavigation}>
+          <Text style={styles.buttonText}>Lihat Laporan</Text>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
