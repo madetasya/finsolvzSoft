@@ -10,7 +10,7 @@ const companySchema = new mongoose.Schema(
     profilePicture: {
       type: String,
       default: null,
-      required: [false],
+      required: false,
     },
     user: [
       {

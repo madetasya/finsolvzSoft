@@ -12,48 +12,42 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const createCompany = async (req, res) => {
+const createCompany = async (req, res, next) => {
   try {
     const { name, profilePicture, user } = req.body;
+
+    let users = [];
+
     if (user) {
       const existingUser = await UserModel.findById(user);
       if (!existingUser) {
-        return res.status(400).json({ error: "User Not Found!" });
+        return next({ name: "NotFound", message: "User not found" });
       }
+      users = [user];
     }
 
     const newCompany = new Company({
       name,
       profilePicture,
-      user: user || null,
+      user: users,
     });
 
     await newCompany.save();
     res.status(201).json({ message: "Company created successfully", company: newCompany });
   } catch (error) {
-    console.error("Error creating company:", error);
-    res.status(500).json({ error: error.message });
+    next({ name: "Error", message: "Internal Server Error" });
   }
 };
 
-const getCompanies = async (req, res, next) => {
+export const getCompanies = async (req, res) => {
   try {
-    console.log("🔍 Fetching companies from database...");
-
-    const companies = await Company.find();
-    console.log("✅ Companies found in DB:", companies);
-
-    if (!companies || companies.length === 0) {
-      console.log("⚠️ No companies found in database.");
-      return res.status(200).json([]);
-    }
-
+    const companies = await Company.find().populate("user", "_id name"); // <<< FIX INI
     res.json(companies);
   } catch (error) {
-    console.error("❌ Error fetching companies:", error);
-    next(error);
+    res.status(500).json({ message: error.message });
   }
 };
+
 
 const getCompanyById = async (req, res, next) => {
   try {
@@ -111,45 +105,60 @@ const getUserCompanies = async (req, res, next) => {
     next(error);
   }
 };
-
 const updateCompany = async (req, res, next) => {
   try {
     if (req.user.role !== "SUPER_ADMIN") {
       throw { name: "Forbidden" };
     }
 
-    const { companyId } = req.params;
+    const { id } = req.params; // <-- sudah bener ini
     const { name, user } = req.body;
-    let profilePicture = req.body.profilePicture; // URL
 
-    // LIBRARY IMAGE
-    if (req.file) {
-      try {
-        const uploadedResponse = await cloudinary.uploader.upload(req.file.path, { folder: "CompanyLogo" });
-        profilePicture = uploadedResponse.secure_url;
-      } catch (uploadError) {
-        console.error("Cloudinary upload failed:", uploadError);
-        return res.status(500).json({ message: "Cloudinary upload failed", error: uploadError });
-      }
-    }
-
+    let users = [];
     if (user) {
-      const existingUser = await UserModel.findById(user);
-      if (!existingUser) {
-        throw { name: "NotFound", message: "User not found" };
+      if (Array.isArray(user)) {
+        users = user;
+      } else {
+        users = [user];
       }
     }
 
-    const updatedCompany = await Company.findByIdAndUpdate(companyId, { $set: { name, profilePicture, user } }, { new: true, runValidators: true });
-
-    if (!updatedCompany) {
+    const company = await Company.findById(id);
+    if (!company) {
       throw { name: "NotFound", message: "Company not found" };
     }
 
-    await redis.del(`company:${companyId}`, JSON.stringify(updatedCompany));
-    await redis.del(`company:name:${updatedCompany.name}`, JSON.stringify(updatedCompany));
+    // HANDLE UPLOAD GAMBAR
+    let profilePicture = company.profilePicture;
+    if (req.file) {
+      try {
+        const uploaded = await cloudinary.uploader.upload(req.file.path, {
+          folder: "CompanyLogo",
+        });
+        profilePicture = uploaded.secure_url;
+      } catch (uploadError) {
+        console.log("UPLOAD GAGAL >>>>", uploadError);
+        return res.status(500).json({
+          message: "Cloudinary upload failed",
+          error: uploadError,
+        });
+      }
+    }
 
-    return res.status(200).json({ message: "Success", company: updatedCompany });
+    // UPDATE FIELD
+    if (name) company.name = name;
+    company.profilePicture = profilePicture;
+    if (users.length > 0) company.user = users;
+
+    await company.save();
+
+    await redis.del(`company:${id}`);
+    await redis.del(`company:name:${company.name}`);
+
+    res.status(200).json({
+      message: "Success",
+      company,
+    });
   } catch (error) {
     next(error);
   }
@@ -161,12 +170,14 @@ const deleteCompany = async (req, res, next) => {
       throw { name: "Forbidden" };
     }
 
-    const { companyId } = req.params;
-    const deletedCompany = await Company.findByIdAndDelete(companyId);
+    const { id } = req.params; // <-- ganti ke id
+
+    const deletedCompany = await Company.findByIdAndDelete(id);
     if (!deletedCompany) {
       throw { name: "NotFound" };
     }
-    await redis.del(`company:${companyId}`);
+
+    await redis.del(`company:${id}`);
     await redis.del(`company:name:${deletedCompany.name}`);
 
     res.json({ message: "Company deleted successfully", company: deletedCompany });
@@ -174,5 +185,6 @@ const deleteCompany = async (req, res, next) => {
     next(error);
   }
 };
+
 
 export default { createCompany, getCompanies, getCompanyById, getCompanyByName, getUserCompanies, updateCompany, deleteCompany };

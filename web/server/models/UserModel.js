@@ -7,7 +7,13 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, trim: true, match: [/^\S+@\S+\.\S+$/] },
     password: { type: String, required: true, select: false },
     role: { type: String, required: true, enum: ["SUPER_ADMIN", "ADMIN", "CLIENT"] },
-    company: { type: String, required: false, trim: true },
+    company: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: false,
+    }
+  ],
     resetPasswordToken: { type: String, required: false },
     resetPasswordExpires: { type: Date, required: false },
   },

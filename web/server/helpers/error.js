@@ -10,13 +10,14 @@ function errorWarning(err, req, res, next) {
     case "ValidationError":
       status = 400;
       message = "Invalid Input";
+      break;
     case "Unauthorized":
       status = 401;
       message = "Invalid Token";
       break;
     case "InvalidEmailOrPassword":
       status = 401;
-      message = "Email not found or Password not matched";
+      message = "Email not found or Password not match";
       break;
     case "ExistingData":
       status = 402;
@@ -24,7 +25,7 @@ function errorWarning(err, req, res, next) {
       break;
     case "Forbidden":
       status = 403;
-      message = "Not Authorized";
+      message = "Not authorized";
       break;
     case "NotFound":
       status = 404;
@@ -32,7 +33,9 @@ function errorWarning(err, req, res, next) {
       break;
   }
 
+  console.log("ERROR GILAAA >>>>", err);
   res.status(status).json({ message });
 }
 
 export default errorWarning;
+``;

@@ -1,209 +1,157 @@
-import { Report } from "../models/ReportModel.js";
-import redis from "../config/redis.js";
-import { calculateCategoryTotal } from "../helpers/categoryTotalValue.js";
-import xlsx from "xlsx";
+import Report from "../models/ReportModel.js";
 import mongoose from "mongoose";
-import ReportTypeModel from "../models/ReportTypeModel.js";
 
-export const importExcel = async (req, res) => {
+const createReport = async (req, res, next) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+    const { reportName, reportType, year, company, currency, createBy, userAccess, reportData } = req.body;
 
-    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rawData = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-
-    if (rawData.length < 2) {
-      return res.status(400).json({ error: "Excel file is empty or incorrectly formatted." });
-    }
-    const headers = rawData[0].map((h) => (h || "").trim());
-    const monthStartIndex = headers.findIndex((h) =>
-      ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].includes(h)
-    );
-    if (monthStartIndex === -1) {
-      return res.status(400).json({ error: "No month columns found in the Excel file." });
-    }
-    const monthHeaders = headers.slice(monthStartIndex);
-    const categories = [];
-    let currentCategory = null;
-    rawData.slice(1).forEach((row) => {
-      const categoryName = row[0]?.trim() || currentCategory;
-      const subcategories = row.slice(1, monthStartIndex).filter((s) => s.trim() !== "");
-
-      const data = monthHeaders.reduce((acc, month, index) => {
-        acc[month] = Number(row[monthStartIndex + index]) || 0;
-        return acc;
-      }, {});
-
-      if (categoryName && subcategories.length > 0) {
-        categories.push({
-          categories: categoryName,
-          subcategories,
-          data,
-        });
-        currentCategory = categoryName;
-      }
-    });
-
-    res.status(200).json({ categories });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-const getAllReports = async (req, res) => {
-  const cache = await redis.get("reports");
-  if (cache) return res.json(JSON.parse(cache));
-  
-  const reports = await Report.find().populate("reportType", "name");
-  await redis.set("reports", JSON.stringify(reports));
-  res.json(reports);
-};
-
-
-const getReportById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid report ID format" });
-    }
-     const report = await Report.findById(id)
-       .populate("reportType", "name") 
-       .populate("company", "name");
-    if (!report) {
-      return res.status(404).json({ message: "Report not found" });
-    }
-    res.json(report);
-  } catch (error) {
-    console.error("Error fetching report:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-const getReportByName = async (req, res) => {
-  const { name } = req.params;
-  const cache = await redis.get(`report:name:${name}`);
-  if (cache) return res.json(JSON.parse(cache));
-
-  const reports = await Report.find({ reportName: name });
-  if (!reports.length) return res.status(404).json({ name: "NotFound" });
-
-  await redis.set(`report:name:${name}`, JSON.stringify(reports));
-  res.json(reports);
-};
-
-const getReportByCompany = async (req, res) => {
-  try {
-    const { companyId } = req.params;
-    const reports = await Report.find({ company: companyId })
-      .populate("reportType", "name")
-      .populate("company", "name")
-      .select("reportName reportType company year monthData updatedAt");
-
-    res.status(200).json(reports);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch reports" });
-  }
-};
-
-const getReportByReportType = async (req, res) => {
-  try {
-    const { reportType } = req.params; 
-    const reportTypeData = await ReportTypeModel.findOne({ name: reportType });
-
-    if (!reportTypeData) {
-      return res.status(404).json({ error: "Report type not found" });
-    }
-    const reports = await Report.find({ reportType: reportTypeData._id }).populate("reportType", "name");
-
-    if (!reports.length) {
-      return res.status(404).json({ error: "No reports found for this report type" });
-    }
-    res.status(200).json(reports);
-  } catch (error) {
-    console.error("Error fetching reports by reportType:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-const createReport = async (req, res) => {
-  try {
-    const { reportName, reportType, year, company, currency, userAccess, categories, subcategories, monthData } = req.body;
-
-    if (!reportName || !reportType || !year || !company || !currency) {
-      return res.status(400).json({ error: "All required fields must be filled." });
-    }
-    const formattedSubcategories = Array.isArray(subcategories) ? subcategories.flat().map((sub) => sub || "") : [];
-    const parsedMonthData = {};
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    months.forEach((month) => {
-      parsedMonthData[month] = Array.isArray(monthData[month])
-        ? monthData[month].map((item) => ({
-            category: item?.category || "Unknown",
-            value: item?.value !== undefined ? Number(item.value.toString().replace(",", ".")) : 0,
-          }))
-        : [];
-    });
-    console.log("data sebelum ke backend ==>", JSON.stringify(parsedMonthData, null, 2));
-
-    const newReport = new Report({
+    const report = new Report({
       reportName,
       reportType,
       year,
       company,
       currency,
-      userCreated: req.user._id,
-      userAccess: userAccess || [],
-      categories,
-      subcategories: formattedSubcategories,
-      monthData: parsedMonthData,
+      createBy,
+      userAccess,
+      reportData,
     });
 
-    await newReport.save();
-    await redis.del("reports");
-    res.status(201).json({ message: "Report created successfully", report: newReport });
+    await report.save();
+    res.status(201).json(report);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 };
 
 const updateReport = async (req, res) => {
   const { id } = req.params;
-  const { reportName, reportType, year, company, currency, userAccess, categories, subcategories, monthData } = req.body;
 
-  const report = await Report.findByIdAndUpdate(
-    id,
-    { reportName, reportType, year, company, currency, userAccess, categories, subcategories, monthData },
-    { new: true }
-  );
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid report ID" });
+  }
 
-  if (!report) return res.status(404).json({ name: "NotFound" });
+  try {
+    const updated = await Report.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-  await redis.del("reports");
-  await redis.del(`report:${id}`);
-  res.json(report);
+    if (!updated) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
+
 
 const deleteReport = async (req, res) => {
-  const { id } = req.params;
-  const report = await Report.findByIdAndDelete(id);
-  if (!report) return res.status(404).json({ name: "NotFound" });
-
-  await redis.del("reports");
-  await redis.del(`report:${id}`);
-  res.json({ message: "Deleted Successfully" });
+  try {
+    const { id } = req.params;
+    const deleted = await Report.findByIdAndDelete(id);
+    if (!deleted) 
+      return 
+    res.status(404).json({ name: "NotFound" });
+    res.status(200).json({ message: "Report berhasil dihapus" });
+  } catch (err) {
+    console.error("DELETE REPORT GAGAL >>>", err);
+    res.status(500).json({ message: "Gagal hapus report" });
+  }
 };
 
+//GET
+
+const getAllReports = async (req, res) => {
+  try {
+    const reports = await Report.find().populate("company reportType createdBy");
+    res.status(200).json(reports);
+  } catch (err) {
+    console.error("GET ALL REPORTS ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil semua report" });
+  }
+};
+
+const getReportById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const report = await Report.findById(id).populate("company reportType createdBy");
+    if (!report) return res.status(404).json({ message: "Report tidak ditemukan" });
+    res.status(200).json(report);
+  } catch (err) {
+    console.error("GET REPORT BY ID ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil report by id" });
+  }
+};
+
+const getReportByName = async (req, res) => {
+  try {
+    const { name } = req.params;
+    const report = await Report.findOne({ reportName: name }).populate("company reportType createdBy");
+    if (!report) return res.status(404).json({ message: "Report tidak ditemukan" });
+    res.status(200).json(report);
+  } catch (err) {
+    console.error("GET REPORT BY NAME ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil report by name" });
+  }
+};
+
+const getReportByCompany = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const reports = await Report.find({ company: companyId }).populate("company reportType createdBy");
+    res.status(200).json(reports);
+  } catch (err) {
+    console.error("GET REPORT BY COMPANY ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil report by company" });
+  }
+};
+
+const getReportByReportType = async (req, res) => {
+  try {
+    const { reportType } = req.params;
+    const reports = await Report.find({ reportType }).populate("company reportType createdBy");
+    res.status(200).json(reports);
+  } catch (err) {
+    console.error("GET REPORT BY REPORT TYPE ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil report by reportType" });
+  }
+};
+
+const getReportByUserAccess = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reports = await Report.find({ userAccess: userId }).populate("company reportType createdBy");
+    res.status(200).json(reports);
+  } catch (err) {
+    console.error("GET REPORT BY USER ACCESS ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil report by userAccess" });
+  }
+};
+
+const getReportByCreatedBy = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reports = await Report.find({ createdBy: userId }).populate("company reportType createdBy");
+    res.status(200).json(reports);
+  } catch (err) {
+    console.error("GET REPORT BY CREATEDBY ERROR >>>", err);
+    res.status(500).json({ message: "Gagal ambil report by createdBy" });
+  }
+};
+
+
 export default {
-  importExcel,
+  createReport,
+  updateReport,
+  deleteReport,
   getAllReports,
   getReportById,
   getReportByName,
   getReportByCompany,
   getReportByReportType,
-  createReport,
-  updateReport,
-  deleteReport,
+  getReportByUserAccess,
+  getReportByCreatedBy,
 };
-// reference: https://mongoosejs.com/docs/6.x/docs/queries.html
+

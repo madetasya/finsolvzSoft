@@ -26,10 +26,6 @@ const getLoginUser = async (req, res, next) => {
 
 const getUsers = async (req, res, next) => {
   try {
-    // if ((req.user.role !== "SUPER_ADMIN" && req.user.role !== "ADMIN") || !req.user) {
-    //   throw { name: "Forbidden" };
-    // }
-
     const cachedUsers = await redis.get("users");
     if (cachedUsers) {
       return res.json(JSON.parse(cachedUsers));
@@ -37,10 +33,9 @@ const getUsers = async (req, res, next) => {
 
     const users = await User.find();
     await redis.set("users", JSON.stringify(users));
-
     res.json(users);
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
 
@@ -55,7 +50,7 @@ const getUserById = async (req, res, next) => {
     }
     res.json(user);
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
 
@@ -79,7 +74,7 @@ const getUserByName = async (req, res, next) => {
 
     res.json(user);
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
 
@@ -87,31 +82,59 @@ const register = async (req, res, next) => {
   try {
     const { name, email, password, role, company } = req.body;
 
+    // VALIDASI ROLE
     if (!req.user || req.user.role !== "SUPER_ADMIN") {
       throw { name: "Forbidden" };
     }
 
-    if (!name || !email || !password || !role) {
-      throw { name: "ValidationError", message: "Name, email, password, and role are required" };
+    // VALIDASI INPUT
+    if (!name || !email || !password || !role || !company) {
+      throw {
+        name: "ValidationError",
+        message: "Name, email, password, role, and company are required",
+      };
     }
 
+    let companies = [];
+    if (Array.isArray(company)) {
+      companies = company;
+    } else if (company) {
+      companies = [company];
+    }
+
+    const existingCompanies = await Company.find({ name: { $in: companies } });
+    const companyIds = existingCompanies.map((company) => company._id);
+
+    // VALIDASI USER EXIST
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw { name: "ExistingUser", message: "User with this email already exists" };
+      throw {
+        name: "ExistingUser",
+        message: "User with this email already exists",
+      };
     }
 
     const hashedPassword = await hashPassword(password);
 
-    const newUser = new User({ name, email, password: hashedPassword, role, company });
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      company: companyIds,
+    });
 
     await newUser.save();
     await redis.del("users");
 
     return res.status(201).json({ message: "Success", newUser });
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
+
+
+
 const login = async (req, res, next) => {
   try {
     let { email, password } = req.body;
@@ -126,7 +149,7 @@ const login = async (req, res, next) => {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    const isMatch = await comparePassword(password, findUser.password);
+    const isMatch = comparePassword(password, findUser.password);
 
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid email or password" });
@@ -141,8 +164,8 @@ const login = async (req, res, next) => {
 
     res.status(200).json({ access_token });
   } catch (error) {
-    console.error("❌ Error in login function:", error);
-    next(error);
+    console.error("SUMTHIGN WONG DUDE=========:", error);
+     next({ name: "Error", error });
   }
 };
 
@@ -150,7 +173,7 @@ const logout = async (req, res) => {
   try {
     const { authorization } = req.headers;
     if (!authorization || !authorization.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Unauthorized - Invalid Token Format" });
+      throw { name: "Unauthorized", message: "Invalid Token" };
     }
 
     const token = authorization.split(" ")[1];
@@ -158,7 +181,7 @@ const logout = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized - User Not Found" });
+    throw { name: "NotFound", message: "User not found" };
     }
 
     user.tokens = user.tokens.filter((t) => t.token !== token);
@@ -166,17 +189,19 @@ const logout = async (req, res) => {
 
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+     next({ name: "Error", error });
   }
 };
 
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
-    if (!email) throw { name: "ValidationError", message: "Email is required" };
+    if (!email) 
+      throw { name: "ValidationError", message: "Email is required" };
 
     const user = await User.findOne({ email });
-    if (!user) throw { name: "NotFound", message: "User not found" };
+    if (!user) 
+      throw { name: "NotFound", message: "User not found" };
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
@@ -186,22 +211,22 @@ const forgotPassword = async (req, res, next) => {
 
     const resetLink = `${req.protocol}://${req.get("host")}/reset-password/${resetToken}`;
 
-    const emailBody = `Greetings! \n\nLooks like you forgot your password.\nToo bad this feature still under development. Sorry for the inconvenience. \n\nIf you didn’t request this, either someone’s trying to hack you, or you’re just forgot about it. Either way, ignore this email.\n\nStay safe,\nFinsolvz by Adviz`;
-    // const emailBody = `Greetings! \n\nLooks like you forgot your password. \n\nClick the link below to reset your password:\n\n ${resetLink} \n\nThis link expires in 1 hour. ⏳\n\nIf you didn’t request this, either someone’s trying to hack you, or you’re just forgot about it. Either way, ignore this email.\n\nStay safe,\nFinsolvz by Adviz`;
+    const emailBody = `Greetings! \n\nLooks like you forgot your password. \n\nClick the link below to reset your password:\n\n ${resetLink} \n\nThis link expires in 1 hour. ⏳\n\nIf you didn’t request this, either someone’s trying to hack you, or you’re just forgot about it. Either way, ignore this email.\n\nStay safe,\nFinsolvz by Adviz`;
 
     await sendEmail(user.email, "Finsolvz Password Reset Request", emailBody);
 
     res.status(200).json({ message: "Password reset link sent to your email" });
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
 
 const resetPassword = async (req, res, next) => {
   try {
     const { token, newPassword } = req.body;
-    if (!token || !newPassword) throw { name: "ValidationError", message: "Token and new password are required" };
-
+    if (!token || !newPassword) 
+      throw { name: "ValidationError", message: "Token or new password are required" };
+    
     const user = await User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
     if (!user) throw { name: "InvalidToken", message: "Invalid or expired token" };
 
@@ -213,7 +238,7 @@ const resetPassword = async (req, res, next) => {
 
     res.status(200).json({ message: "Password successfully reset" });
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
 
@@ -231,44 +256,76 @@ const updateRole = async (req, res, next) => {
 
     return res.status(200).json({ message: "Success", user });
   } catch (error) {
-    next(error);
+     next({ name: "Error", error }); next({ name: "Error", error });
   }
 };
+
 const updateUser = async (req, res, next) => {
   try {
+    const { name, email, password, role, company } = req.body;
     const { id } = req.params;
-    const { password, company } = req.body;
-    const loggedInUser = req.user;
 
-    if (loggedInUser.role === "CLIENT" || loggedInUser.role === "ADMIN") {
-      if (loggedInUser._id.toString() !== id) {
-        return res.status(403).json({ error: "You can only update your own account" });
+    const loginUser = req.user;
+
+    const userData = await User.findById(id);
+    if (!userData) {
+      return next({ name: "NotFound", message: "User not found" });
+    }
+
+    if (loginUser.role !== "SUPER_ADMIN") {
+      return next({
+        name: "Forbidden",
+        message: "You can only update your own data",
+      });
+    }
+
+    if (loginUser.role !== "SUPER_ADMIN" && role && role !== userData.role) {
+      return next({
+        name: "Forbidden",
+        message: "You are not allowed to change your role",
+      });
+    }
+
+    if (email && email !== userData.email) {
+      const emailUsed = await User.findOne({ email });
+      if (emailUsed) {
+        return next({
+          name: "ExistingUser",
+          message: "Email already used by another user",
+        });
       }
     }
 
-    const updateData = {};
-
-    if (company === null || company === "") {
-      updateData.$unset = { company: "" };
+    let companyNames = [];
+    if (Array.isArray(company)) {
+      companyNames = company;
     } else if (company) {
-      const companyExists = await Company.findOne({ name: company });
-      if (!companyExists) {
-        return res.status(400).json({ error: "Invalid company. Please select a valid company." });
-      }
-      updateData.company = company;
+      companyNames = [company];
     }
 
-    if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+    if (name) userData.name = name;
+    if (email) userData.email = email;
+    if (password) userData.password = await hashPassword(password);
+    if (loginUser.role === "SUPER_ADMIN" && role) {
+      userData.role = role;
+    }
+    if (companyNames.length > 0) {
+      userData.company = companyNames;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+    await userData.save();
+    await redis.del("users");
 
-    return res.status(200).json({ message: "Success", data: updatedUser });
+    res.status(200).json({
+      message: "User updated",
+      updatedUser: userData,
+    });
   } catch (error) {
-    next(error);
+    next({ name: "Error", error });
   }
 };
+
+
 
 const deleteUser = async (req, res, next) => {
   try {
@@ -287,7 +344,7 @@ const deleteUser = async (req, res, next) => {
 
     res.json({ message: "Success", user: deletedUser });
   } catch (error) {
-    next(error);
+     next({ name: "Error", error });
   }
 };
 

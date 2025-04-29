@@ -4,13 +4,13 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/image/FinsolvzLogo.png",
+    "icon": "./assets/image/LargeFinsolvz.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/image/FinsolvzLogo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/image/LogoHorizontal.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#011414;"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,22 +23,24 @@
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/image/logoFinsolvz.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor":  "#011414;"
       },
       "package": "finsolvz.beta"
     },
     "web": {
       "favicon": "./assets/image/FinsolvzLogo.png"
     },
-    "extra": {
+  "extra": {
+      "EXPO_PUBLIC_API_URL": "http://192.168.68.115:8787",
       "eas": {
-        "projectId": "8d732c17-06ab-40ae-b834-8d798cf2bd27",
-          "EXPO_PUBLIC_API_URL": "http://159.89.194.251"
+        "projectId": "8d732c17-06ab-40ae-b834-8d798cf2bd27"
       }
     },
+
     "plugins": [
       "expo-secure-store",
-      "expo-video"
+      "expo-router",
+      "expo-font"
     ]
   }
 }

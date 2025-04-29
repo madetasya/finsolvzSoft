@@ -11,7 +11,7 @@ import userController from "./controllers/userController.js";
 const app = express();
 
 database();
-// app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,5 +36,6 @@ app.get("/favicon.ico", (req, res) => {
 const PORT = process.env.PORT;
 // app.listen(PORT, "0.0.0.0", () => console.log(`🚀🚀 Server running on http://159.89.194.251:${PORT} 🚀🚀`));
 // console.log(process.env.EXPO_PUBLIC_API_URL);
+app.listen(PORT, "0.0.0.0", () => console.log(`🚀🚀 Server running on http://0.0.0.0:${PORT} 🚀🚀`));
 
-app.listen(PORT, () => console.log(`🚀🚀 Server running on http://localhost:${PORT} 🚀🚀`));
+// app.listen(PORT, () => console.log(`🚀🚀 Server running on http://localhost:${PORT} 🚀🚀`));
