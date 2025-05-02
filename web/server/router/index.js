@@ -14,9 +14,9 @@ router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
 router.post("/login", userController.login);
 router.get("/users", userController.getUsers);
-router.post("/register", userController.register);
 
 router.use(authentication);
+router.post("/register", userController.register);
 router.post("/logout", userController.logout);
 router.put("/updateRole", userController.updateRole);
 router.put("/updateUser/:id", userController.updateUser);

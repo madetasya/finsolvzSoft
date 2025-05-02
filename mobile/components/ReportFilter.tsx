@@ -147,7 +147,9 @@ const fetchReportTypes = async (companyId: string) => {
       </View>
       <View style={styles.buttonContainer}>
         {loading ? (
-          <ActivityIndicator size="small" color="#253d3d" />
+          <Text style={{ color: '#A0A0A0', fontStyle: 'italic', fontFamily: 'UbuntuLightItalic', paddingLeft: 16, marginBottom: 16 }}>
+            Fetching data...
+          </Text>
         ) : (
           reportTypes.slice(0, 3).map((reportType) => (
             <TouchableOpacity
@@ -169,6 +171,7 @@ const fetchReportTypes = async (companyId: string) => {
             </TouchableOpacity>
           ))
         )}
+
       </View>
 
     </View>
@@ -179,11 +182,13 @@ const styles = StyleSheet.create({
   filterContainer: {
     justifyContent: "flex-start",
     alignItems: "flex-start",
-    borderRadius: 32,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingTop: 24,
+    borderColor: "#1B3935",
+    backgroundColor: "#011414",
+    paddingVertical: 24,
+    marginTop: 16,
+    width: "96%"
   },
   chooseText: {
     fontSize: 16,
@@ -191,6 +196,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#F4F4F4",
     marginBottom: 8,
+    fontFamily: "UbuntuRegular",
   },
   filterContainerOpen: {
     flex: -1,

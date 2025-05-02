@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     marginBottom: 8,
     fontSize: 18,
-  }, 
+  },
 
   buttonLogin: {
     width: '100%',
@@ -126,92 +126,103 @@ const styles = StyleSheet.create({
 
 })
 
-  const LoginPage: React.FC = () => {
-    const navigation = useNavigation<NavigationProp<RootStackParamList>>()
+const LoginPage: React.FC = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>()
 
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
-    const [modalVisible, setModalVisible] = useState(false)
-    const [otpEmail, setOtpEmail] = useState('')
-    const [errorMessage, setErrorMessage] = useState('')
-    const [otpMessage, setOtpMessage] = useState('')
-    const [otpMessageType, setOtpMessageType] = useState<'error' | 'info'>('info')
-    const [otpLoading, setOtpLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [otpEmail, setOtpEmail] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [otpMessage, setOtpMessage] = useState('')
+  const [otpMessageType, setOtpMessageType] = useState<'error' | 'info'>('info')
+  const [otpLoading, setOtpLoading] = useState(false)
 
-    const scale = useSharedValue(1)
-    const opacity = useSharedValue(1)
+  const scale = useSharedValue(1)
+  const opacity = useSharedValue(1)
 
-    const animatedStyle = useAnimatedStyle(() => {
-      return {
-        transform: [{ scale: scale.value }],
-        opacity: opacity.value,
-      }
-    })
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
+    }
+  })
 
-    const handleLogin = async () => {
-      if (email.trim() === '' || password.trim() === '') {
-        setErrorMessage('Please fill in all fields')
-        return
-      }
+  const handleLogin = async () => {
+    if (email.trim() === '' || password.trim() === '') {
+      setErrorMessage('Please fill in all fields');
+      return;
+    }
 
-      try {
-        const response = await axios.post(`${API_URL}/login`, {
-          email,
-          password,
-        })
+    try {
+      const response = await axios.post(`${API_URL}/login`, { email, password });
 
-        console.log("Login response GILAAAA:", response.data)
+      console.log("Login response GILAAAA:", response.data);
 
-        const { access_token } = response.data
+      const { access_token } = response.data;
 
-        if (access_token) {
-          await AsyncStorage.setItem("authToken", access_token)
-          console.log("Login Success: Token saved")
+      if (access_token) {
+        await AsyncStorage.setItem("authToken", access_token);
+        console.log("Login Success: Token saved");
 
+        // decode token untuk ambil role
+        const payload = JSON.parse(atob(access_token.split('.')[1]));
+        const userRole = payload.role;
+
+        console.log("User ROLE  ", userRole);
+
+        if (userRole === "CLIENT") {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "ClientHomePage" }],
+          });
+        } else {
           navigation.reset({
             index: 0,
             routes: [{ name: "Home" }],
-          })
-        } else {
-          console.log("LOGIN GAGAL NO TOKEN BROOOO")
-          setErrorMessage('Something wrong')
+          });
         }
-      } catch (error) {
-        console.log("LOGIN ERROR BROO >>>>", error)
-        setErrorMessage('Wrong email or password')
+      } else {
+        console.log("LOGIN GAGAL NO TOKEN BROOOO");
+        setErrorMessage('Something wrong');
       }
+    } catch (error) {
+      console.log("LOGIN ERROR BROO >>>>", error);
+      setErrorMessage('Wrong email or password');
     }
+  };
 
-    const handleForgotPassword = async () => {
-      if (otpEmail.trim() === '') {
-        setOtpMessageType('error')
-        setOtpMessage('Invalid email address')
-        return
-      }
-      setOtpLoading(true)
 
-      try {
-        const response = await axios.post(`${API_URL}/forgot-password`, {
-          email: otpEmail,
-        })
-        console.log("FORGOT PASSWORD SUCCESS >>>>", response.data)
-
-        setOtpMessageType('info') 
-        setOtpMessage('OTP sent! Check your email')
-      } catch (error) {
-        console.log("FORGOT PASSWORD ERROR ANJAY >>>>", error)
-
-        setOtpMessageType('error')
-        if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.message) {
-          setOtpMessage('User Not Found')
-        } else {
-          setOtpMessage('Invalid Input')
-        }
-      } finally {
-        setOtpLoading(false)
-      }
+  const handleForgotPassword = async () => {
+    if (otpEmail.trim() === '') {
+      setOtpMessageType('error')
+      setOtpMessage('Invalid email address')
+      return
     }
+    setOtpLoading(true)
+
+    try {
+      const response = await axios.post(`${API_URL}/forgot-password`, {
+        email: otpEmail,
+      })
+      console.log("FORGOT PASSWORD SUCCESS >>>>", response.data)
+
+      setOtpMessageType('info')
+      setOtpMessage('OTP sent! Check your email')
+    } catch (error) {
+      console.log("FORGOT PASSWORD ERROR ANJAY >>>>", error)
+
+      setOtpMessageType('error')
+      if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.message) {
+        setOtpMessage('User Not Found')
+      } else {
+        setOtpMessage('Invalid Input')
+      }
+    } finally {
+      setOtpLoading(false)
+    }
+  }
 
 
   return (
@@ -260,7 +271,7 @@ const styles = StyleSheet.create({
           {errorMessage}
         </HelperText>
         <TextInput
-          autoCapitalize="none" 
+          autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
           placeholder="Email"
@@ -275,10 +286,10 @@ const styles = StyleSheet.create({
           ]}
           contentStyle={{ fontFamily: email.length > 0 ? 'UbuntuRegular' : 'UbuntuLightItalic', paddingLeft: 0 }}
         />
-        
+
         {/* PASS FORM */}
         <TextInput
-          autoCapitalize="none" 
+          autoCapitalize="none"
           value={password}
           onChangeText={setPassword}
           placeholder="Password"
@@ -303,8 +314,8 @@ const styles = StyleSheet.create({
         />
 
 
-      {/* FORGOT PASSWORD */}
-      {/* FORGOT PASSWORD */}
+        {/* FORGOT PASSWORD */}
+        {/* FORGOT PASSWORD */}
         <Text
           onPress={() => {
             setOtpEmail(email)
@@ -334,7 +345,7 @@ const styles = StyleSheet.create({
             opacity.value = withTiming(1, { duration: 100 })
           }}
           onPress={() => {
-            handleLogin() 
+            handleLogin()
           }}
         >
           <Animated.View style={[styles.buttonLogin, animatedStyle]}>
@@ -351,7 +362,6 @@ const styles = StyleSheet.create({
       {/* MODAL */}
       {modalVisible && (
         <>
-          {/* Blur layar penuh */}
           <BlurView
             intensity={30}
             tint="dark"
@@ -369,7 +379,7 @@ const styles = StyleSheet.create({
           }} />
         </>
       )}
-  
+
 
       {/* MODAL */}
       <Portal>
@@ -401,7 +411,7 @@ const styles = StyleSheet.create({
 
           {/* FORM EMAIL */}
           <TextInput
-            autoCapitalize="none" 
+            autoCapitalize="none"
             value={otpEmail}
             onChangeText={setOtpEmail}
             placeholder="Enter your email"
@@ -412,7 +422,7 @@ const styles = StyleSheet.create({
             textColor="#E2E4D7"
             style={{
               backgroundColor: 'transparent',
-         
+
             }}
             contentStyle={{
               fontFamily: 'UbuntuLight',
@@ -421,7 +431,7 @@ const styles = StyleSheet.create({
               paddingLeft: 0,
             }}
           />
-          
+
           {/* HELPER OTP */}
           <HelperText
             type={otpMessageType}
@@ -471,12 +481,12 @@ const styles = StyleSheet.create({
                 fontSize: 16,
               }}
             >
-            
+
               Send OTP
             </Button>
           </View>
         </Modal>
-        </Portal>
+      </Portal>
 
 
     </View>

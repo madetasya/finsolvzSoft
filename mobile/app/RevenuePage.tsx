@@ -7,13 +7,16 @@ import RevenueTable from "../components/RevenueTable";
 import { ScrollView } from "react-native-gesture-handler";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import CompareButton from "../components/CompareButton";
+import { RootStackParamList } from "../types";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const RevenuePage: React.FC<{ selectedCompany: string | null }> = ({ selectedCompany }) => {
+const RevenuePage: React.FC = () => {
+
   type ReportPageRouteProp = RouteProp<{ params: { reportId: string } }, "params">;
-  const route = useRoute<ReportPageRouteProp>();
-  const reportId = route.params?.reportId;
+  const route = useRoute<RouteProp<RootStackParamList, "Revenue">>();
+  const { reportId, selectedCompany } = route.params;
+
 
   const [report, setReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);

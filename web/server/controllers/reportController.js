@@ -5,16 +5,16 @@ const createReport = async (req, res, next) => {
   try {
     const { reportName, reportType, year, company, currency, createBy, userAccess, reportData } = req.body;
 
-    const report = new Report({
-      reportName,
-      reportType,
-      year,
-      company,
-      currency,
-      createBy,
-      userAccess,
-      reportData,
-    });
+const report = new Report({
+  reportName,
+  reportType: new mongoose.Types.ObjectId(reportType),
+  year,
+  company: new mongoose.Types.ObjectId(company),
+  currency,
+  createdBy: new mongoose.Types.ObjectId(createBy),
+  userAccess: userAccess.map((id) => new mongoose.Types.ObjectId(id)),
+  reportData,
+});
 
     await report.save();
     res.status(201).json(report);
@@ -51,15 +51,16 @@ const deleteReport = async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Report.findByIdAndDelete(id);
-    if (!deleted) 
-      return 
-    res.status(404).json({ name: "NotFound" });
+    if (!deleted) {
+      return res.status(404).json({ name: "NotFound" });
+    }
     res.status(200).json({ message: "Report berhasil dihapus" });
   } catch (err) {
     console.error("DELETE REPORT GAGAL >>>", err);
     res.status(500).json({ message: "Gagal hapus report" });
   }
 };
+
 
 //GET
 
@@ -81,7 +82,7 @@ const getReportById = async (req, res) => {
     res.status(200).json(report);
   } catch (err) {
     console.error("GET REPORT BY ID ERROR >>>", err);
-    res.status(500).json({ message: "Gagal ambil report by id" });
+    res.status(500).json({ message: "Failed to fetch data by id" });
   }
 };
 
@@ -93,7 +94,7 @@ const getReportByName = async (req, res) => {
     res.status(200).json(report);
   } catch (err) {
     console.error("GET REPORT BY NAME ERROR >>>", err);
-    res.status(500).json({ message: "Gagal ambil report by name" });
+    res.status(500).json({ message: "Failed to fetch data by name" });
   }
 };
 
@@ -104,7 +105,7 @@ const getReportByCompany = async (req, res) => {
     res.status(200).json(reports);
   } catch (err) {
     console.error("GET REPORT BY COMPANY ERROR >>>", err);
-    res.status(500).json({ message: "Gagal ambil report by company" });
+    res.status(500).json({ message: "Failed to fetch data by company" });
   }
 };
 
@@ -115,7 +116,7 @@ const getReportByReportType = async (req, res) => {
     res.status(200).json(reports);
   } catch (err) {
     console.error("GET REPORT BY REPORT TYPE ERROR >>>", err);
-    res.status(500).json({ message: "Gagal ambil report by reportType" });
+    res.status(500).json({ message: "Failed to fetch data by reportType" });
   }
 };
 
@@ -126,7 +127,7 @@ const getReportByUserAccess = async (req, res) => {
     res.status(200).json(reports);
   } catch (err) {
     console.error("GET REPORT BY USER ACCESS ERROR >>>", err);
-    res.status(500).json({ message: "Gagal ambil report by userAccess" });
+    res.status(500).json({ message: "Failed to fetch data by userAccess" });
   }
 };
 
@@ -137,7 +138,7 @@ const getReportByCreatedBy = async (req, res) => {
     res.status(200).json(reports);
   } catch (err) {
     console.error("GET REPORT BY CREATEDBY ERROR >>>", err);
-    res.status(500).json({ message: "Gagal ambil report by createdBy" });
+    res.status(500).json({ message: "Failed to fetch data by createdBy" });
   }
 };
 

@@ -23,7 +23,7 @@ const createCompany = async (req, res, next) => {
       if (!existingUser) {
         return next({ name: "NotFound", message: "User not found" });
       }
-      users = [user];
+      users = [req.user._id];
     }
 
     const newCompany = new Company({

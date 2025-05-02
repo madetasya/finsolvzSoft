@@ -70,9 +70,18 @@ const SearchPage = ({ navigation }: any) => {
         fetchData();
     }, []);
 
-    const filteredReports = reports.filter((item) =>
-        item.reportName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredReports = reports.filter((item) => {
+        const matchQuery = item.reportName.toLowerCase().includes(searchQuery.toLowerCase());
+
+        if (userRole === "CLIENT") {
+            const hasAccess =
+                item.userAccess?.includes(userId) || item.createdBy === userId;
+            return matchQuery && hasAccess;
+        }
+
+        return matchQuery;
+    });
+
 
     const filteredUsers = users.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())

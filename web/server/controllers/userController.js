@@ -2,11 +2,10 @@ dotenv.config();
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import sendEmail from "../helpers/nodemailer.js";
+import send from "../helpers/nodemailer.js";
 import { hashPassword, comparePassword } from "../helpers/bcrypt.js";
 import { generateToken } from "../helpers/jwt.js";
 import redis from "../config/redis.js";
-import Company from "../models/CompanyModel.js";
 import User from "../models/UserModel.js";
 
 const getLoginUser = async (req, res, next) => {
@@ -76,36 +75,21 @@ const getUserByName = async (req, res, next) => {
   } catch (error) {
     next({ name: "Error", error });
   }
-};
-
-const register = async (req, res, next) => {
+};const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, company } = req.body;
+    const { name, email, password, role } = req.body;
 
-    // VALIDASI ROLE
     if (!req.user || req.user.role !== "SUPER_ADMIN") {
       throw { name: "Forbidden" };
     }
 
-    // VALIDASI INPUT
-    if (!name || !email || !password || !role || !company) {
+    if (!name || !email || !password || !role) {
       throw {
         name: "ValidationError",
-        message: "Name, email, password, role, and company are required",
+        message: "Name, email, password, role are required",
       };
     }
 
-    let companies = [];
-    if (Array.isArray(company)) {
-      companies = company;
-    } else if (company) {
-      companies = [company];
-    }
-
-    const existingCompanies = await Company.find({ name: { $in: companies } });
-    const companyIds = existingCompanies.map((company) => company._id);
-
-    // VALIDASI USER EXIST
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw {
@@ -121,7 +105,7 @@ const register = async (req, res, next) => {
       email,
       password: hashedPassword,
       role,
-      company: companyIds,
+      company: [],
     });
 
     await newUser.save();
@@ -132,6 +116,7 @@ const register = async (req, res, next) => {
     next({ name: "Error", error });
   }
 };
+
 
 
 
@@ -193,33 +178,88 @@ const logout = async (req, res) => {
   }
 };
 
-const forgotPassword = async (req, res, next) => {
+
+
+const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) 
-      throw { name: "ValidationError", message: "Email is required" };
 
     const user = await User.findOne({ email });
-    if (!user) 
-      throw { name: "NotFound", message: "User not found" };
+    if (!user) {
+      return res.status(404).json({ msg: "Email not found" });
+    }
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000;
+    const token = crypto.randomBytes(20).toString("hex");
+    const expires = Date.now() + 3600000; // 1 jamm
 
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expires;
     await user.save();
 
-    const resetLink = `${req.protocol}://${req.get("host")}/reset-password/${resetToken}`;
+    const resetLink = `https://localhost:3000/reset-password?token=${token}`;
+    const displayName = user.name ? user.name.charAt(0).toUpperCase() + user.name.slice(1) : "Valued User";
 
-    const emailBody = `Greetings! \n\nLooks like you forgot your password. \n\nClick the link below to reset your password:\n\n ${resetLink} \n\nThis link expires in 1 hour. ⏳\n\nIf you didn’t request this, either someone’s trying to hack you, or you’re just forgot about it. Either way, ignore this email.\n\nStay safe,\nFinsolvz by Adviz`;
+    const messageText = `Dear ${displayName},
 
-    await sendEmail(user.email, "Finsolvz Password Reset Request", emailBody);
+We have received a request to reset the password associated with your Finsolvz account.
 
-    res.status(200).json({ message: "Password reset link sent to your email" });
-  } catch (error) {
-    next({ name: "Error", error });
+If you initiated this request, please use the link below to create a new password:
+
+${resetLink}
+
+Please note that this link will expire in 1 hour for security reasons.
+
+If you did not request a password reset, no action is required. However, we recommend updating your password as a precaution.
+
+Sincerely,
+The Finsolvz by Adviz Team`;
+
+    const logoURL = "https://res.cloudinary.com/yourcloud/image/upload/v1710000000/finsolvz-logo.png";
+
+    const messageHTML = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <div style="text-align: left; margin-bottom: 20px;">
+          <img src="${logoURL}" alt="Finsolvz Logo" style="height: 40px;">
+        </div>
+
+        <p>Dear ${displayName},</p>
+
+        <p>We have received a request to reset the password associated with your <strong>Finsolvz</strong> account.</p>
+
+        <p>If you initiated this request, please click the button below to create a new password:</p>
+
+        <p style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" 
+             style="background-color: #1D4ED8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Reset Password
+          </a>
+        </p>
+
+        <p><strong>Note:</strong> This link will expire in 1 hour for security reasons.</p>
+
+        <p>If you did not request this password reset, no further action is required. However, we recommend updating your password as a precaution.</p>
+
+        <p>If you have any questions or need assistance, please do not hesitate to contact our support team.</p>
+
+        <p style="margin-top: 40px;">Sincerely,<br/>The Finsolvz by Adviz Team</p>
+      </div>
+    `;
+
+    await send.sendMail({
+      from: process.env.NODEMAILER_EMAIL,
+      to: user.email,
+      subject: "Reset Your Password - Finsolvz",
+      text: messageText,
+      html: messageHTML,
+    });
+
+    res.json({ msg: "Password reset link sent to your email." });
+  } catch (err) {
+    console.error("ERROR SENDING RESET EMAIL >>>", err);
+    res.status(500).json({ msg: "Failed to send reset email." });
   }
 };
+
 
 const resetPassword = async (req, res, next) => {
   try {
@@ -262,7 +302,7 @@ const updateRole = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, company } = req.body;
+    const { name, email, password, role, } = req.body;
     const { id } = req.params;
 
     const loginUser = req.user;
@@ -279,7 +319,7 @@ const updateUser = async (req, res, next) => {
       });
     }
 
-    if (loginUser.role !== "SUPER_ADMIN" && role && role !== userData.role) {
+    if (loginUser.role !== "SUPER_ADMIN" ) {
       return next({
         name: "Forbidden",
         message: "You are not allowed to change your role",
@@ -296,12 +336,12 @@ const updateUser = async (req, res, next) => {
       }
     }
 
-    let companyNames = [];
-    if (Array.isArray(company)) {
-      companyNames = company;
-    } else if (company) {
-      companyNames = [company];
-    }
+    // let companyNames = [];
+    // if (Array.isArray(company)) {
+    //   companyNames = company;
+    // } else if (company) {
+    //   companyNames = [company];
+    // }
 
     if (name) userData.name = name;
     if (email) userData.email = email;
@@ -309,9 +349,9 @@ const updateUser = async (req, res, next) => {
     if (loginUser.role === "SUPER_ADMIN" && role) {
       userData.role = role;
     }
-    if (companyNames.length > 0) {
-      userData.company = companyNames;
-    }
+    // if (companyNames.length > 0) {
+    //   userData.company = companyNames;
+    // }
 
     await userData.save();
     await redis.del("users");

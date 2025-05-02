@@ -1,13 +1,30 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, Image, Dimensions, Alert } from "react-native";
 import { ActivityIndicator } from "react-native";
 
 const screenWidth = Dimensions.get('window').width;
 
 interface Report {
+    _id: string;
     reportName: string;
-    company?: { name: string };
+    reportType: {
+        _id: string;
+        name: string;
+    };
+    company: {
+        _id: string;
+        name: string;
+    };
+    currency: string;
+    year: number;
+    userAccess: {
+        _id: string;
+        name: string;
+    }[];
+    jsonHeader: string[];
+    jsonData: string[][];
 }
+
 
 interface ReportListProps {
     reports: Report[];
@@ -17,11 +34,12 @@ interface ReportListProps {
     onPressCreateReport: () => void;
     searchQuery: string;
     userRole: string | null;
+    onDeleteReport: (reportId: string) => void;
 }
 
 const ITEMS_PER_PAGE = 4;
 
-const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport,  onPressCreateReport, searchQuery, userRole }) => {
+const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport,  onPressCreateReport, searchQuery, userRole, onDeleteReport }) => {
     const [page, setPage] = useState(0);
 
     const filteredReports = reports.filter((item) => {
@@ -72,7 +90,7 @@ const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport
             {/* Card Container */}
             <View style={{
                 width: screenWidth * 0.9,
-                height: 400,
+                height: 500,
                 borderRadius: 20,
                 overflow: 'hidden',
                 backgroundColor: '#1B3935',
@@ -99,23 +117,52 @@ const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport
                                 <ActivityIndicator size="large" color="#E2E4D7" />
                             </View>
                         ) : (
-                            currentReports.map((item, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={{
-                                        backgroundColor: '#112725',
-                                        borderRadius: 8,
-                                        padding: 16,
-                                        marginBottom: 12,
-                                        elevation: 5,
-                                 
-                                    }}
-                                    onPress={() => onPressReport(item)}
-                                >
-                                    <Text style={{ color: '#E2E4D7', fontSize: 16, fontFamily: 'UbuntuBold' }}>{item.reportName}</Text>
-                                    <Text style={{ color: '#A0A0A0', paddingTop: 8, fontSize: 14, fontFamily: 'UbuntuLight' }}>{item.company?.name || 'No Company'}</Text>
-                                </TouchableOpacity>
-                            ))
+                                currentReports.map((item, index) => (
+                                    <View
+                                        key={index}
+                                        style={{
+                                            backgroundColor: '#112725',
+                                            borderRadius: 8,
+                                            padding: 16,
+                                            marginBottom: 12,
+                                            elevation: 5,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                        }}
+                                    >
+                                        <TouchableOpacity
+                                            style={{ flex: 1 }}
+                                            onPress={() => onPressReport(item)}
+                                        >
+                                            <Text style={{ color: '#E2E4D7', fontSize: 16, fontFamily: 'UbuntuBold' }}>{item.reportName}</Text>
+                                            <Text style={{ color: '#A0A0A0', paddingTop: 8, fontSize: 14, fontFamily: 'UbuntuLight' }}>{item.company?.name || 'No Company'}</Text>
+                                        </TouchableOpacity>
+
+                                        {userRole === "SUPER_ADMIN" && (
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    Alert.alert(
+                                                        "Confirm Delete",
+                                                        "Are you sure you want to delete this report?",
+                                                        [
+                                                            { text: "Cancel", style: "cancel" },
+                                                            { text: "Delete", style: "destructive", onPress: () => onDeleteReport(item._id) }
+                                                        ]
+                                                    );
+                                                }}
+                                                style={{
+                                                    marginLeft: 12,
+                                                    padding: 6,
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: 12, color: '#FF5C5C' }}>Delete Report</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                ))
+
+
                         )}
                     </View>
 
@@ -139,7 +186,7 @@ const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport
                                 borderColor: '#E2E4D7',
                             }}
                         >
-                            <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold' }}>{"<"}</Text>
+                            <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold' }}>Previous</Text>
                         </TouchableOpacity>
 
                         {/* See More */}
@@ -170,7 +217,7 @@ const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport
                                 borderColor: '#E2E4D7',
                             }}
                         >
-                            <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold' }}>{">"}</Text>
+                            <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold' }}>Next</Text>
                         </TouchableOpacity>
                     </View>
 

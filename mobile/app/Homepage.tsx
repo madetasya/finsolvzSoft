@@ -237,6 +237,27 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       Alert.alert("Error", error?.response?.data?.message || "Failed to save user");
     }
   };
+  const handleDeleteReport = async (reportId: string) => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) {
+        console.error("No auth token found");
+        return;
+      }
+
+      await axios.delete(`${API_URL}/reports/${reportId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      Alert.alert("Success", "Report deleted successfully!");
+
+      const updatedReports = reports.filter((report) => report._id !== reportId);
+      setReports(updatedReports);
+    } catch (err) {
+      console.error("Error deleting report >>>", err);
+      Alert.alert("Error", "Failed to delete report.");
+    }
+  };
 
   const handleAddUser = () => {
     setNewUserName("");
@@ -299,7 +320,10 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         reports={reports}
         loading={loading}
         searchQuery=""
-        onPressReport={(report) => console.log('THIS IS REPORT >>>', report)}
+        onPressReport={(report) => {
+          navigation.navigate('CreateReport', { reportId: report._id });
+        }}
+        onDeleteReport={handleDeleteReport} 
         // onPressSeeMore={() => console.log('SEE MORE REPORTS >>>')}
         onPressCreateReport={() => navigation.navigate('CreateReport')}
         userRole={userRole}
@@ -335,7 +359,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create Company</Text>
+            {/* <Text style={styles.modalTitle}>Create Company</Text> */}
 
             <TextInput
               placeholder="Company Name"
@@ -591,12 +615,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
-    alignSelf: "stretch", // << ini kunci biar selebar TextInput
+    alignSelf: "stretch",
   },
   modalItemText: {
     fontSize: 16,
     color: "#000",
-    paddingLeft: 4, // dikit padding kiri biar teks gak mepet border
+    paddingLeft: 4, 
   },
 
   modalSaveButton: {

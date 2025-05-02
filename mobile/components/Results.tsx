@@ -72,15 +72,21 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany }) => {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.resultCard}
-            onPress={() =>
-              navigation.navigate(
-                item.reportType?.name === "Revenue" ? "Revenue" : "BSPL",
-                { reportId: item._id }
-              )
-            }
+            onPress={() => {
+              if (item.reportType?.name === "Revenue") {
+                navigation.navigate("Revenue", {
+                  reportId: item._id,
+                  selectedCompany,
+                });
+              } else {
+                navigation.navigate("BSPLPage", {
+                  reportId: item._id,
+                  selectedCompany,
+                });
+              }
+            }}
 
-
-          >
+>
             <View style={styles.resultContent}>
               <Text style={styles.resultTitle}>{item.reportName}</Text>
               {/* <Text style={styles.resultSubtitle}>{item.reportType?.name || "Unknown Type"}</Text>

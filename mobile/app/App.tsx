@@ -4,13 +4,26 @@ import { createStackNavigator } from "@react-navigation/stack";
 import LoginPage from "./LoginPage";
 import HomePage from "./Homepage";
 import RevenuePage from "./RevenuePage";
+import BSPLPage from "./BSPLPage";
 import { useFonts } from 'expo-font'
 import * as SplashScreen from 'expo-splash-screen';
 import { PaperProvider } from "react-native-paper";
 import SearchPage from "./Searchpage";
 import CreateReportPage from "./CreateReport";
+import ClientHomePage from "./ClientHomepage";
 
-const Stack = createStackNavigator();
+type RootStackParamList = {
+  Login: undefined;
+  Home: undefined;
+  SearchPage: undefined;
+  CreateReport: undefined;
+  ClientHomePage: undefined;
+  Revenue: { reportId: string; selectedCompany?: string | null};
+  BSPLPage: { reportId: string; selectedCompany: string | null };
+};
+
+
+const Stack = createStackNavigator<RootStackParamList>();
 SplashScreen.preventAutoHideAsync();
 
 const App: React.FC = () => {
@@ -46,7 +59,11 @@ const App: React.FC = () => {
           <Stack.Screen name="Home" component={HomePage} />
           <Stack.Screen name="SearchPage" component={SearchPage} />
           <Stack.Screen name="CreateReport" component={CreateReportPage} />
-          {/* <Stack.Screen name="Revenue" component={RevenuePage} /> */}
+          <Stack.Screen name="ClientHomePage" component={ClientHomePage} />
+          <Stack.Screen name="Revenue" component={RevenuePage} />
+          <Stack.Screen name="BSPLPage" component={BSPLPage} />
+
+
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

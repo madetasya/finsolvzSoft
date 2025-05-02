@@ -1,6 +1,9 @@
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
-  Revenue: { reportId: string };
-  BSPL: { reportId: string }; 
+  SearchPage: undefined;
+  CreateReport: undefined;
+  ClientHomePage: undefined;
+  Revenue: { reportId: string; selectedCompany?: string | null};
+  BSPLPage: { reportId: string; selectedCompany: string | null };
 };
