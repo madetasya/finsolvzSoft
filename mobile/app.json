@@ -39,7 +39,7 @@
       "favicon": "./assets/image/FinsolvzLogo.png"
     },
     "extra": {
-      "EXPO_PUBLIC_API_URL": "http://192.168.68.115:8787",
+      "EXPO_PUBLIC_API_URL": "http://159.89.194.251:8787",
       "eas": {
         "projectId": "8d732c17-06ab-40ae-b834-8d798cf2bd27"
       }
