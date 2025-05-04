@@ -35,8 +35,8 @@ const toggleExpand = (category: string) => {
         [category]: !prev[category]
     }));
     useEffect(() => {
-        console.log("📊 BSPLTable - monthData:", JSON.stringify(monthData, null, 2));
-        console.log("📊 BSPLTable - categories:", JSON.stringify(categories, null, 2));
+        // console.log("📊 BSPLTable - monthData:", JSON.stringify(monthData, null, 2));
+        // console.log("📊 BSPLTable - categories:", JSON.stringify(categories, null, 2));
     }, [monthData, categories]);
 
 };

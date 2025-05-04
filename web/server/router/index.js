@@ -18,12 +18,14 @@ router.get("/users", userController.getUsers);
 router.use(authentication);
 router.post("/register", userController.register);
 router.post("/logout", userController.logout);
+router.patch("/change-password", userController.changePassword);
+router.get("/loginUser", userController.getLoginUser);
 router.put("/updateRole", userController.updateRole);
 router.put("/updateUser/:id", userController.updateUser);
 router.get("/users/:name", userController.getUserByName);
 router.get("/users/:id", userController.getUserById);
 router.delete("/users/:id", userController.deleteUser);
-router.get("/loginUser", userController.getLoginUser);
+
 
 // REPORT ROUTES
 // router.post("/reports/import", multer.single("file"), reportController.importExcelReport);
@@ -35,6 +37,8 @@ router.get("/reports", reportController.getAllReports);
 router.get("/reports/:id", reportController.getReportById);
 router.get("/reports/name/:name", reportController.getReportByName);
 router.get("/reports/company/:companyId", reportController.getReportByCompany);
+router.post("/reports/companies", reportController.getReportsByCompanies);
+
 router.get("/reports/reportType/:reportType", reportController.getReportByReportType);
 router.get("/reports/userAccess/:id", reportController.getReportByUserAccess);
 router.get("/reports/createdBy/:id", reportController.getReportByCreatedBy);

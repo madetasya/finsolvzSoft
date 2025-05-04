@@ -137,7 +137,7 @@ const updateCompany = async (req, res, next) => {
         });
         profilePicture = uploaded.secure_url;
       } catch (uploadError) {
-        console.log("UPLOAD GAGAL >>>>", uploadError);
+        // console.log("UPLOAD GAGAL >>>>", uploadError);
         return res.status(500).json({
           message: "Cloudinary upload failed",
           error: uploadError,

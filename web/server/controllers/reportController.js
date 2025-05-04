@@ -5,16 +5,16 @@ const createReport = async (req, res, next) => {
   try {
     const { reportName, reportType, year, company, currency, createBy, userAccess, reportData } = req.body;
 
-const report = new Report({
-  reportName,
-  reportType: new mongoose.Types.ObjectId(reportType),
-  year,
-  company: new mongoose.Types.ObjectId(company),
-  currency,
-  createdBy: new mongoose.Types.ObjectId(createBy),
-  userAccess: userAccess.map((id) => new mongoose.Types.ObjectId(id)),
-  reportData,
-});
+    const report = new Report({
+      reportName,
+      reportType: new mongoose.Types.ObjectId(reportType),
+      year,
+      company: new mongoose.Types.ObjectId(company),
+      currency,
+      createdBy: new mongoose.Types.ObjectId(createBy),
+      userAccess: userAccess.map((id) => new mongoose.Types.ObjectId(id)),
+      reportData,
+    });
 
     await report.save();
     res.status(201).json(report);
@@ -46,7 +46,6 @@ const updateReport = async (req, res) => {
   }
 };
 
-
 const deleteReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -56,11 +55,9 @@ const deleteReport = async (req, res) => {
     }
     res.status(200).json({ message: "Report berhasil dihapus" });
   } catch (err) {
-    console.error("DELETE REPORT GAGAL >>>", err);
     res.status(500).json({ message: "Gagal hapus report" });
   }
 };
-
 
 //GET
 
@@ -69,7 +66,7 @@ const getAllReports = async (req, res) => {
     const reports = await Report.find().populate("company reportType createdBy");
     res.status(200).json(reports);
   } catch (err) {
-    console.error("GET ALL REPORTS ERROR >>>", err);
+    // console.error("GET ALL REPORTS ERROR >>>", err);
     res.status(500).json({ message: "Gagal ambil semua report" });
   }
 };
@@ -81,7 +78,7 @@ const getReportById = async (req, res) => {
     if (!report) return res.status(404).json({ message: "Report tidak ditemukan" });
     res.status(200).json(report);
   } catch (err) {
-    console.error("GET REPORT BY ID ERROR >>>", err);
+    // console.error("GET REPORT BY ID ERROR >>>", err);
     res.status(500).json({ message: "Failed to fetch data by id" });
   }
 };
@@ -93,7 +90,7 @@ const getReportByName = async (req, res) => {
     if (!report) return res.status(404).json({ message: "Report tidak ditemukan" });
     res.status(200).json(report);
   } catch (err) {
-    console.error("GET REPORT BY NAME ERROR >>>", err);
+    // console.error("GET REPORT BY NAME ERROR >>>", err);
     res.status(500).json({ message: "Failed to fetch data by name" });
   }
 };
@@ -104,8 +101,26 @@ const getReportByCompany = async (req, res) => {
     const reports = await Report.find({ company: companyId }).populate("company reportType createdBy");
     res.status(200).json(reports);
   } catch (err) {
-    console.error("GET REPORT BY COMPANY ERROR >>>", err);
+    // console.error("GET REPORT BY COMPANY ERROR >>>", err);
     res.status(500).json({ message: "Failed to fetch data by company" });
+  }
+};
+
+const getReportsByCompanies = async (req, res) => {
+  try {
+    const { companyIds } = req.body; 
+    if (!Array.isArray(companyIds)) {
+      return res.status(400).json({ message: "Need 2 or more company" });
+    }
+
+    const reports = await Report.find({
+      company: { $in: companyIds },
+    }).populate("company reportType createdBy");
+
+    res.status(200).json(reports);
+  } catch (err) {
+    // console.error("GET MULTI COMPANY REPORTS ERROR >>>", err);
+    res.status(500).json({ message: "Failed to fetch companies" });
   }
 };
 
@@ -115,7 +130,7 @@ const getReportByReportType = async (req, res) => {
     const reports = await Report.find({ reportType }).populate("company reportType createdBy");
     res.status(200).json(reports);
   } catch (err) {
-    console.error("GET REPORT BY REPORT TYPE ERROR >>>", err);
+    // console.error("GET REPORT BY REPORT TYPE ERROR >>>", err);
     res.status(500).json({ message: "Failed to fetch data by reportType" });
   }
 };
@@ -126,7 +141,7 @@ const getReportByUserAccess = async (req, res) => {
     const reports = await Report.find({ userAccess: userId }).populate("company reportType createdBy");
     res.status(200).json(reports);
   } catch (err) {
-    console.error("GET REPORT BY USER ACCESS ERROR >>>", err);
+    // console.error("GET REPORT BY USER ACCESS ERROR >>>", err);
     res.status(500).json({ message: "Failed to fetch data by userAccess" });
   }
 };
@@ -137,11 +152,10 @@ const getReportByCreatedBy = async (req, res) => {
     const reports = await Report.find({ createdBy: userId }).populate("company reportType createdBy");
     res.status(200).json(reports);
   } catch (err) {
-    console.error("GET REPORT BY CREATEDBY ERROR >>>", err);
+    // console.error("GET REPORT BY CREATEDBY ERROR >>>", err);
     res.status(500).json({ message: "Failed to fetch data by createdBy" });
   }
 };
-
 
 export default {
   createReport,
@@ -151,8 +165,8 @@ export default {
   getReportById,
   getReportByName,
   getReportByCompany,
+  getReportsByCompanies,
   getReportByReportType,
   getReportByUserAccess,
   getReportByCreatedBy,
 };
-

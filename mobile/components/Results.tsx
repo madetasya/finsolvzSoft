@@ -7,26 +7,31 @@ import {
   FlatList,
   Dimensions,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("window");
-
 interface ResultsPageProps {
   selectedCompany: string | null;
-  reportType: string[] | null;
+  reportType: string | null; // tambahin ini
 }
+
 
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany }) => {
+const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }) => {
+
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
+
 
   const fetchReports = async () => {
     if (!selectedCompany) return;
@@ -35,7 +40,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany }) => {
       setLoading(true);
       const token = await AsyncStorage.getItem("authToken");
       if (!token) {
-        console.error("No user token found");
+        Alert.alert("Oops", "Something went wrong, try again later.");
         return;
       }
 
@@ -45,29 +50,42 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany }) => {
 
       setReports(response.data);
     } catch (error) {
-      console.error("Error fetching reports:", error);
+      Alert.alert("Oops", "Something went wrong, try again later.");
     } finally {
       setLoading(false);
     }
   };
 
+  
   useEffect(() => {
     fetchReports();
-  }, [selectedCompany]);
+  }, [selectedCompany, reportType]);
+
+  const filteredReports = reportType
+    ? reports.filter((r) => reportType.includes(r.reportType?._id))
+    : reports;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} >
       {/* Heeader */}
       <View style={styles.header}>
-        <Text style={styles.resultsText}>Reports</Text>
+        <Text style={styles.resultsText}>{t("results.title")}</Text>
+
       </View>
 
       {/* Loading*/}
       {loading && <ActivityIndicator size="large" color="#6c918b" />}
+      {!loading && filteredReports.length === 0 && (
+        <Text style={{ color: "#fff", fontStyle: "italic", marginBottom: 8 }}>
+          {t("results.noData")}
+        </Text>
+      )}
+
 
       {/* Result List */}
       <FlatList
-        data={reports}
+        data={filteredReports}
+        style={{paddingTop: -8}}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -107,6 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     marginTop: 20,
+    paddingBottom: 26, 
   },
   header: {
     flexDirection: "row",
@@ -118,6 +137,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 22,
     fontWeight: "bold",
+    marginTop: -8,
   },
   resultList: {
     paddingBottom: 20,

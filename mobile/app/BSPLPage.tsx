@@ -3,12 +3,10 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-nat
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRoute } from "@react-navigation/native";
 import axios from "axios";
+import NestedDrawer from "../components/NestedDrawer"; 
+
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
-const CELL_WIDTH = 100;
-const CELL_HEIGHT = 40;
-const CELL_WIDTHS = [200, 130, 130]; // Label, 2024, 2023
-
 
 
 const BSPLPage: React.FC = () => {
@@ -28,7 +26,7 @@ const BSPLPage: React.FC = () => {
                 });
                 setReport(res.data);
             } catch (err) {
-                console.error("ERROR FETCH REPORT >>>", err);
+                // Handle error
             } finally {
                 setLoading(false);
             }
@@ -53,7 +51,8 @@ const BSPLPage: React.FC = () => {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 }}>
+
             <Text style={styles.title}>{report.reportName}</Text>
 
             <Text style={styles.subtitle}>{report.reportType?.name}</Text>
@@ -62,82 +61,8 @@ const BSPLPage: React.FC = () => {
             <Text style={styles.subtitle}>{report.currency}</Text>
             <Text style={styles.subtitle}>{report.year}</Text>
 
-            <ScrollView horizontal style={styles.tableWrapper}>
-                <View>
-     
-                    {/* Header Row */}
-                    <View style={styles.row}>
-                        <View style={[styles.cell, { width: CELL_WIDTHS[0], alignItems: "flex-start" }]}>
-                            <Text style={[styles.cellText, { fontWeight: "bold", fontFamily: "UbuntuBold" }]}>
-                                {report.reportData?.jsonHeader?.[0] ?? "Description"}
-                            </Text>
-                        </View>
-                        <View style={[styles.cell, { width: CELL_WIDTHS[1] }]}>
-                            <Text style={[styles.cellText, { fontWeight: "bold", fontFamily: "UbuntuBold" }]}>
-                                {report.reportData?.jsonHeader?.[2] ?? "2024"}
-                            </Text>
-                        </View>
-                        <View style={[styles.cell, { width: CELL_WIDTHS[2] }]}>
-                            <Text style={[styles.cellText, { fontWeight: "bold", fontFamily: "UbuntuBold" }]}>
-                                {report.reportData?.jsonHeader?.[3] ?? "2023"}
-                            </Text>
-                        </View>
-                    </View>
+            <NestedDrawer reportId={reportId} />
 
-                    {/* Body Rows */}
-                    {Array.isArray(report.reportData?.jsonData) &&
-                        report.reportData.jsonData.map((row: string[], rowIndex: number) => {
-                            const label = row[0] ?? "";
-                            const value2024 = row[2] ?? "";
-                            const value2023 = row[3] ?? "";
-
-                            const isJumlah = label.toUpperCase().includes("JUMLAH");
-
-                            return (
-                                <View key={rowIndex} style={styles.row}>
-                                    {/* Label Cell */}
-                                    <View
-                                        style={[
-                                            styles.cell,
-                                            {
-                                                width: CELL_WIDTHS[0],
-                                                alignItems: "flex-start",
-                                                paddingLeft: 8,
-                                            },
-                                        ]}
-                                    >
-                                        {label !== "" && (
-                                            <Text
-                                                style={[
-                                                    styles.cellText,
-                                                    (rowIndex === 0 || isJumlah) && {
-                                                        fontWeight: "bold",
-                                                        fontFamily: "UbuntuBold",
-                                                    },
-                                                ]}
-                                            >
-                                                {label}
-                                            </Text>
-                                        )}
-                                    </View>
-
-                                    {/* Value 2024 */}
-                                    <View style={[styles.cell, { width: CELL_WIDTHS[1] }]}>
-                                        <Text style={styles.cellText}>{value2024}</Text>
-                                    </View>
-
-                                    {/* Value 2023 */}
-                                    <View style={[styles.cell, { width: CELL_WIDTHS[2] }]}>
-                                        <Text style={styles.cellText}>{value2023}</Text>
-                                    </View>
-                                </View>
-                            );
-                        })}
-
-
-
-                </View>
-            </ScrollView>
 
         </ScrollView>
     );
@@ -148,11 +73,14 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#0D241F",
         padding: 16,
+        paddingBottom: 32,
     },
     title: {
         fontSize: 20,
         color: "#fff",
         fontWeight: "bold",
+        marginTop: 32,
+
         marginBottom: 8,
     },
     subtitle: {
@@ -169,28 +97,6 @@ const styles = StyleSheet.create({
     errorText: {
         color: "red",
         fontSize: 16,
-    },
-    tableWrapper: {
-        marginTop: 16,
-        backgroundColor: "#7A8B89",
-        borderRadius: 12,
-        padding: 8,
-    },
-    row: {
-        flexDirection: "row",
-    },
-    cell: {
-        minHeight: 36,
-        justifyContent: "flex-start",
-        alignItems: "flex-start",
-        paddingHorizontal: 6,
-        paddingVertical: 4,
-    },
-
-
-    cellText: {
-        color: "#fff",
-        textAlign: "left",
     },
 });
 

@@ -95,7 +95,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         setReports(mergedReports);
       }
     } catch (error) {
-      console.error("Error fetching reports >>>", error);
+      Alert.alert("Error", "Failed to fetch reports. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,8 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       });
       setUsers(response.data);
     } catch (error) {
-      console.error("Error fetching users >>>", error);
+      // console.error("Error fetching users >>>", error);
+      Alert.alert("Error", "Failed to fetch users. Please try again later.");
     }
   };
 
@@ -119,7 +120,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       });
       setCompanies(response.data);
     } catch (error: any) {
-      console.error("Error fetching companies >>>", error?.response?.data || error.message || error);
+      // console.error("Error fetching companies >>>", error?.response?.data || error.message || error);
       Alert.alert("Error", "Failed to fetch companies. Please try again later.");
     }
   };
@@ -147,7 +148,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       if (!token) {
-        console.error("No auth token found");
+        Alert.alert("Oops", "Something went wrong, try again later.");
         return;
       }
 
@@ -177,7 +178,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       fetchCompanies(token);
     } catch (err) {
-      console.error("Error saving company", err);
+      // console.error("Error saving company", err);
       Alert.alert("Error", "Failed to save company");
     }
   };
@@ -186,7 +187,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       if (!token) {
-        console.error("No auth token found");
+        Alert.alert("Oops", "Something went wrong, try login again.");
         return;
       }
 
@@ -198,7 +199,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         ...(selectedUserCompanies.length > 0 ? { company: selectedUserCompanies } : {}),
       };
 
-      console.log("PAYLOAD YANG DIKIRIM >>>>", payload);
+      // console.log("PAYLOAD YANG DIKIRIM >>>>", payload);
 
       if (!payload.name || !payload.email || (!editingUserId && !payload.password)) {
         Alert.alert("Error", "Please fill in all required fields.");
@@ -233,7 +234,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       fetchUsers(token);
     } catch (error: any) {
-      console.error("Error during user registration:", error?.response?.data || error);
+      // console.error("Error during user registration:", error?.response?.data || error);
       Alert.alert("Error", error?.response?.data?.message || "Failed to save user");
     }
   };
@@ -241,7 +242,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       if (!token) {
-        console.error("No auth token found");
+        Alert.alert("Oops", "Something went wrong, try to login again.");
         return;
       }
 
@@ -254,7 +255,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       const updatedReports = reports.filter((report) => report._id !== reportId);
       setReports(updatedReports);
     } catch (err) {
-      console.error("Error deleting report >>>", err);
+      // console.error("Error deleting report >>>", err);
       Alert.alert("Error", "Failed to delete report.");
     }
   };
@@ -282,7 +283,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
       try {
         const token = await AsyncStorage.getItem("authToken");
         if (!token) {
-          console.error("No auth token found");
+          Alert.alert("Oops", "Something went wrong, try again later.");
           return;
         }
 
@@ -297,7 +298,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         await fetchUsers(token);
         await fetchCompanies(token);
       } catch (error) {
-        console.error("Error init HomePage >>>", error);
+        Alert.alert("Oops", "Something went wrong, try again later.");
       }
     };
 
@@ -312,6 +313,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         navigation={navigation}
         userName={userName}
         formatUserName={formatUserName}
+        showLanguageToggle={true} 
       />
 
       <View style={{ height: 280 }} />

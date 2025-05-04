@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,26 +8,24 @@ import { ScrollView } from "react-native-gesture-handler";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import CompareButton from "../components/CompareButton";
 import { RootStackParamList } from "../types";
+import { useTranslation } from "react-i18next";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const RevenuePage: React.FC = () => {
-
-  type ReportPageRouteProp = RouteProp<{ params: { reportId: string } }, "params">;
   const route = useRoute<RouteProp<RootStackParamList, "Revenue">>();
   const { reportId, selectedCompany } = route.params;
-
 
   const [report, setReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [availableReports, setAvailableReports] = useState<any[]>([]);
   const [selectedComparisonReport, setSelectedComparisonReport] = useState<any | null>(null);
-
+  const { t } = useTranslation();
 
   useEffect(() => {
     const getReportById = async () => {
       if (!reportId) {
-        console.error("No report ID provided");
+        Alert.alert("Error", "Something went wrong, try again later.");
         setLoading(false);
         return;
       }
@@ -35,7 +33,7 @@ const RevenuePage: React.FC = () => {
       try {
         const token = await AsyncStorage.getItem("authToken");
         if (!token) {
-          console.error("No token");
+          Alert.alert("Oops", "Something went wrong, try to log in again.");
           setLoading(false);
           return;
         }
@@ -43,9 +41,45 @@ const RevenuePage: React.FC = () => {
         const response = await axios.get(`${API_URL}/reports/${reportId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setReport(response.data);
+
+        setReport(() => {
+          const newData = response.data;
+
+          if (newData?.reportData?.jsonHeader && newData?.reportData?.jsonData) {
+            const headers = newData.reportData.jsonHeader;
+            const rawData = newData.reportData.jsonData;
+
+            const filtered = rawData.filter((row: any) => row[0] && row[0] !== "");
+            const categories = filtered.map((row: any) => row[0]);
+            const months = headers.slice(4);
+            const monthData: Record<string, any[]> = {};
+
+            for (let i = 0; i < months.length; i++) {
+              const month = months[i];
+              monthData[month] = [];
+
+              for (let j = 0; j < filtered.length; j++) {
+                let val = filtered[j][i + 4];
+                if (typeof val === "string") {
+                  val = val.replace(",", ".");
+                  const parsed = parseFloat(val);
+                  val = isNaN(parsed) ? 0 : parsed;
+                }
+                if (typeof val !== "number") {
+                  val = 0;
+                }
+                monthData[month].push(val);
+              }
+            }
+
+            newData.categories = categories;
+            newData.monthData = monthData;
+          }
+
+          return newData;
+        });
       } catch (error) {
-        console.error("Error fetching report:", error);
+        Alert.alert("Error", "Error fetching report data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -53,16 +87,17 @@ const RevenuePage: React.FC = () => {
 
     getReportById();
   }, [reportId]);
+
   useEffect(() => {
-    if (report?.reportType?.name && (selectedCompany || report?.company?._id)) {
-      // console.log("Fetching reports for type:", report.reportType.name, "Company:", selectedCompany || report.company?._id); // DEBUGGING
-      fetchReportsByType(report.reportType.name, selectedCompany || report.company?._id);
+    if (report?.reportType && (selectedCompany || report?.company?._id)) {
+      const reportTypeId = report?.reportType?._id || report?.reportType;
+      fetchReportsByType(reportTypeId, selectedCompany || report.company?._id);
     }
   }, [report, selectedCompany]);
 
   const fetchReportsByType = async (reportType?: string, companyId?: string) => {
     if (!reportType || !companyId) {
-      console.error("Missing Report Type or Company ID");
+      Alert.alert("Error", "Invalid report type or company");
       return;
     }
 
@@ -72,28 +107,25 @@ const RevenuePage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      
-
       if (response.status === 200 && response.data.length > 0) {
         const filteredReports = response.data.filter(
           (element: any) => element._id !== reportId && (element.company?._id === companyId || element.company === companyId)
         );
 
-        // console.log("Filtered reports:", filteredReports); 
-
         setAvailableReports(
-          filteredReports.map((element: any) => ({
+          filteredReports.map((element: any, index: number) => ({
+            key: `${element._id}-${index}`,
             id: element._id,
             title: element.reportName,
             date: element.year.toString(),
           }))
         );
       } else {
-        console.warn("No matching reports found for", reportType);
+        Alert.alert("Error", "No reports found for this type.");
         setAvailableReports([]);
       }
     } catch (error: any) {
-      console.error("Error fetching reports:", error?.response?.data || error.message);
+      Alert.alert("Error", "Failed to fetch reports. Please try again later.");
     }
   };
 
@@ -105,16 +137,48 @@ const RevenuePage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setSelectedComparisonReport(response.data);
+      const newData = response.data;
+      if (newData?.reportData?.jsonHeader && newData?.reportData?.jsonData) {
+        const headers = newData.reportData.jsonHeader;
+        const rawData = newData.reportData.jsonData;
+
+        const filtered = rawData.filter((row: any) => row[0] && row[0] !== "");
+        const categories = filtered.map((row: any) => row[0]);
+        const months = headers.slice(4);
+        const monthData: Record<string, any[]> = {};
+
+        for (let i = 0; i < months.length; i++) {
+          const month = months[i];
+          monthData[month] = [];
+
+          for (let j = 0; j < filtered.length; j++) {
+            let val = filtered[j][i + 4];
+            if (typeof val === "string") {
+              val = val.replace(",", ".");
+              const parsed = parseFloat(val);
+              val = isNaN(parsed) ? 0 : parsed;
+            }
+            if (typeof val !== "number") {
+              val = 0;
+            }
+            monthData[month].push(val);
+          }
+        }
+
+        newData.categories = categories;
+        newData.monthData = monthData;
+      }
+
+      setSelectedComparisonReport(newData);
     } catch (error) {
-      console.error("Error fetching report:", error);
+      Alert.alert("Oops", "Something went wrong, try again later.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.fullScreen}>
+    <ScrollView style={styles.fullScreen} contentContainerStyle={styles.contentContainer}>
       <LinearGradient colors={["#071C25", "#253d3d"]} style={styles.background} />
 
       {loading ? (
@@ -126,7 +190,6 @@ const RevenuePage: React.FC = () => {
           <Text style={styles.detailReport}>{report?.currency || "N/A"}</Text>
           <Text style={styles.detailReport}>{report?.year || "N/A"}</Text>
 
-          {/* MAIN TABLE */}
           {report?.reportType?.name === "Revenue" && report?.monthData && report?.categories && (
             <View>
               <Text style={styles.sectionTitle}>{report.reportName} (Main Report)</Text>
@@ -134,19 +197,17 @@ const RevenuePage: React.FC = () => {
             </View>
           )}
 
-          {/* COMPARE TABLE */}
           {availableReports.length > 0 && (
             <CompareButton availableReports={availableReports} onCompareSelect={handleCompareSelect} />
           )}
 
-          {/* TABLE COMPARISON */}
           {selectedComparisonReport?.reportType?.name === "Revenue" && selectedComparisonReport?.monthData && selectedComparisonReport?.categories && (
             <View>
-              <Text style={styles.sectionTitle}>{selectedComparisonReport.reportName} (Comparison Report)</Text>
+                <Text style={styles.sectionTitle}>{selectedComparisonReport.reportName} {t("report.comparison")}</Text>
               <RevenueTable
                 monthData={selectedComparisonReport.monthData}
                 categories={selectedComparisonReport.categories}
-                hideChart={true} 
+                hideChart={true}
               />
             </View>
           )}
@@ -159,6 +220,9 @@ const RevenuePage: React.FC = () => {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 80,
   },
   background: {
     position: "absolute",

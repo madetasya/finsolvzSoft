@@ -53,7 +53,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({ data, months, categories, 
     );
   };
   useEffect(() => {
-    console.log("📊 BarChartComponent - Data yang diterima:", JSON.stringify(data, null, 2));
+    // console.log("📊 BarChartComponent - Data yang diterima:", JSON.stringify(data, null, 2));
   }, [data]);
 
 

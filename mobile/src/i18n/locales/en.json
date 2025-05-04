@@ -1,0 +1,84 @@
+{
+  "login": {
+    "jargon1": {
+      "part1": "The",
+      "accent": " future"
+    },
+    "jargon2": {
+      "part1": "of financial",
+      "accent": " clarity"
+    },
+    "loginInstruction": "Log in to your account",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "forgotPassword": "Forgot Password?",
+    "sendNewPasswordTitle": "Send New Password",
+    "enterYourEmail": "Enter your email",
+    "cancel": "Cancel",
+    "send": "Send",
+    "signIn": "SIGN IN",
+    "wrongEmailOrPassword": "Wrong email or password",
+    "pleaseFillAllFields": "Please fill in all fields",
+    "invalidEmailAddress": "Invalid email address",
+    "userNotFound": "User Not Found",
+    "invalidInput": "Invalid Input",
+    "newPasswordSent": "A new password has been sent to your email. (Please check your spam folder if you don't see it in your inbox)",
+    "language": {
+      "zh": "中文",
+      "en": "ENG"
+    }
+  },
+  "welcome": "Welcome,",
+  "changePassword": "Change Password",
+  "signOut": "Sign Out",
+  "close": "Close",
+  "newPassword": "New Password",
+  "confirmPassword": "Confirm New Password",
+  "submit": "Submit",
+  "searchPlaceholder": "Search",
+  "passwordChanged": "Password changed successfully!",
+  "passwordFailed": "Failed to change password",
+  "passwordFill": "Please fill all fields",
+  "passwordMismatch": "Passwords do not match",
+  "errorGeneric": "Something went wrong",
+  "cancel": "Cancel",
+
+  "selectCompany": "Select Company",
+  "chooseCompany": "Choose Company",
+  "selectReportType": "Select Report Type",
+  "chooseReportType": "Choose Report Type",
+  "reportTypes": {
+    "Balance Sheet": "Balance Sheet",
+    "Profit and Loss": "Profit and Loss",
+    "Revenue": "Revenue"
+  },
+  "results": {
+    "title": "Reports",
+    "noData": "No reports available"
+  },
+  "comparison": "Comparison Report",
+  "months": {
+    "January": "January",
+    "February": "February",
+    "March": "March",
+    "April": "April",
+    "May": "May",
+    "June": "June",
+    "July": "July",
+    "August": "August",
+    "September": "September",
+    "October": "October",
+    "November": "November",
+    "December": "December"
+  },
+  "filter": {
+    "chooseFilter": "Choose Filter",
+    "fullYear": "Full Year",
+    "quartal": "Quartal",
+    "month": "Month"
+  },
+  "chart": {
+    "pie": "Pie Chart",
+    "bar": "Bar Chart"
+  }
+}
