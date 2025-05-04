@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import * as WebBrowser from "expo-web-browser";
 import { Asset } from "expo-asset";
 import { FlatList } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -343,9 +344,7 @@ const CreateReportPage = () => {
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 } }>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton}>
-                    <Text style={styles.backButtonText}>←</Text>
-                </TouchableOpacity>
+         
                 <Text style={styles.headerTitle}>Create Report</Text>
             </View>
 
@@ -548,14 +547,14 @@ const CreateReportPage = () => {
                     <Text style={styles.buttonTextDark}>Import Excel</Text>
                 </TouchableOpacity>
 
-                {/* <TouchableOpacity
+                <TouchableOpacity
                     style={styles.downloadButton}
-                    onPress={() => setModalVisible(true)}
+                    onPress={() => WebBrowser.openBrowserAsync("https://drive.google.com/file/d/1JQo7bi6PO8OXAym97Gp9xAVbDZm-L-I1/view?usp=sharing")}
                 >
                     <Text style={styles.buttonTextLight}>Download Template</Text>
-                </TouchableOpacity> */}
+                </TouchableOpacity>
             </View>
-            <Modal
+            {/* <Modal
                 visible={isModalVisible}
                 transparent={true}
                 animationType="slide"
@@ -568,7 +567,7 @@ const CreateReportPage = () => {
                             style={styles.modalButton}
                             onPress={() => {
                                 setModalVisible(false);
-                                handleDownloadTemplate("templateFullYear"); // pake nama file
+                                handleDownloadTemplate("templateFullYear"); 
                             }}
                         >
                             <Text style={styles.modalButtonText}>Template Full Year</Text>
@@ -578,7 +577,7 @@ const CreateReportPage = () => {
                             style={styles.modalButton}
                             onPress={() => {
                                 setModalVisible(false);
-                                handleDownloadTemplate("templateYearOnly"); // pake nama file
+                                handleDownloadTemplate("templateYearOnly"); 
                             }}
                         >
                             <Text style={styles.modalButtonText}>Template Year Only</Text>
@@ -592,9 +591,10 @@ const CreateReportPage = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
+            </Modal> */}
             <View style={styles.tableWrapper}>
-                {/* <View style={styles.actionRowGrid}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.actionRowGrid}>
                     <TouchableOpacity style={styles.actionButton} onPress={() => addRow("above")}>
                         <Text style={styles.buttonTextLight}>+ Row Above</Text>
                     </TouchableOpacity>
@@ -619,7 +619,8 @@ const CreateReportPage = () => {
                         <Text style={styles.buttonTextLight}>- Col</Text>
                     </TouchableOpacity>
 
-                </View> */}
+                </View>
+                </ScrollView>
 
                 <ScrollView horizontal>
                     <View>
@@ -725,7 +726,8 @@ const styles = StyleSheet.create({
         fontSize: 24,
         color: '#E2E4D7',
         fontFamily: 'UbuntuBold',
-        alignItems: 'flex-end'
+        alignItems: 'flex-end',
+        paddingTop: 8
     },
 
     // === Form ===
@@ -806,11 +808,13 @@ const styles = StyleSheet.create({
     },
     actionRowGrid: {
         flexDirection: "row",
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
         justifyContent: "flex-start",
-        gap: 8,
+        alignItems: "center",
+        columnGap: 8,
         marginBottom: 12
     },
+
     row: {
         flexDirection: "row"
     },

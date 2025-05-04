@@ -11,8 +11,8 @@ interface CompanyItem {
 
 interface CompanyListProps {
     companies: CompanyItem[];
-    onPressCompany: (company: CompanyItem) => void; // klik 1 company
-    onAddCompany: () => void; // klik tombol add
+    onPressCompany: (company: CompanyItem) => void; 
+    onAddCompany: () => void; 
     userRole: string | null;
 }
 

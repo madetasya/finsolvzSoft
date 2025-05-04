@@ -10,7 +10,6 @@
       "resizeMode": "cover",
       "backgroundColor": "#011414"
     },
-
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
@@ -26,7 +25,6 @@
         "foregroundImage": "./assets/image/logoFinsolvz.png",
         "backgroundColor": "#011414"
       },
-
       "androidStatusBar": {
         "backgroundColor": "#011414",
         "barStyle": "dark-content"
@@ -46,7 +44,11 @@
         "projectId": "8d732c17-06ab-40ae-b834-8d798cf2bd27"
       }
     },
-
-    "plugins": ["expo-secure-store", "expo-router", "expo-font"]
+    "plugins": [
+      "expo-secure-store",
+      "expo-router",
+      "expo-font",
+      "expo-web-browser"
+    ]
   }
 }
