@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Dimensions, Alert } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import ReportFilter from "../components/ReportFilter";
 import Grid from "../assets/image/Grid.svg";
@@ -8,13 +8,20 @@ import ResultsPage from "../components/Results";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import HomeHeader from "../components/HeaderHome";
+import i18n from '../src/i18n'
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
-    const [reportType, setReportType] = useState<string[] | null>(null);
+    const [reportType, setReportType] = useState<string | null>(null);
+
     const [userName, setUserName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const screenHeight = Dimensions.get("window").height;
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [user, setUser] = useState<any | null>(null);
+
 
     function formatUserName(name: string) {
         if (name.length <= 15) {
@@ -32,39 +39,36 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         const secondSpaceIndex = spaceIndexes[1];
         return name.substring(0, secondSpaceIndex) + '\n' + name.substring(secondSpaceIndex + 1);
     }
-
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const token = await AsyncStorage.getItem("authToken");
-                if (!token) {
-                    console.error("No auth token found");
-                    return;
-                }
+                const lang = await AsyncStorage.getItem("selectedLanguage");
+                if (lang) i18n.changeLanguage(lang); // Set bahasa
+                if (!token) return;
 
                 const response = await axios.get(`${API_URL}/loginUser`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
+                setUser(response.data)
                 setUserName(response.data.name);
-
-            } catch (error) {
-                console.error("Error fetching data:", error);
+            } catch (err) {
+                Alert.alert("Oops", "Something went wrong, try again later.");
             } finally {
                 setLoading(false);
             }
         };
-
         fetchUserData();
     }, []);
+
     const handleFilterChange = (company: string | null, type: string[] | null) => {
         setSelectedCompany(company);
-        setReportType(type); 
+        setReportType(type ? type.join(", ") : null); 
     };
+
     const handleReportNavigation = () => {
         if (!selectedCompany || !reportType) return;
-
-        if (reportType?.includes("Revenue")) {
+        if (reportType === "Revenue") {
             navigation.navigate("Revenue", { companyId: selectedCompany, reportType });
         } else {
             navigation.navigate("BSPL", { companyId: selectedCompany, reportType });
@@ -79,15 +83,18 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             />
 
             {/* PROFILE */}
+
             <HomeHeader
                 navigation={navigation}
                 userName={userName}
                 formatUserName={formatUserName}
+                showLanguageToggle={user?.role === 'CLIENT'}
             />
 
 
-            <View style={{ marginTop: 320 }}>
-                <ReportFilter onFilterChange={handleFilterChange}  />
+
+            <View style={{ marginTop: screenHeight * 0.32 }}>
+                <ReportFilter key={i18n.language} onFilterChange={handleFilterChange} />
 
                 <ResultsPage
                     selectedCompany={selectedCompany}
@@ -102,7 +109,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#314E4A",
-    alignItems: "center",
+        alignItems: "center",
     },
     background: {
         position: "absolute",

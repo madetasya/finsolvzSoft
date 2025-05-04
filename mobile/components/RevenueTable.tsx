@@ -3,6 +3,8 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-nati
 import PeriodicDropdown from "./PeriodicDropdown";
 import BarChartComponent from "./BarChartComponent";
 import PieChartComponent from "./PieChartComponent";
+import { useTranslation } from "react-i18next";
+
 
 interface RevenueTableProps {
     monthData: Record<string, any[]>;
@@ -15,6 +17,7 @@ const months = [
     "July", "August", "September", "October", "November", "December"
 ];
 
+
 const quarters = {
     Q1: ["January", "February", "March"],
     Q2: ["April", "May", "June"],
@@ -23,8 +26,12 @@ const quarters = {
 };
 const RevenueTable: React.FC<RevenueTableProps> = ({ monthData, categories, hideChart = false }) => {
     const [chartType, setChartType] = useState<"bar" | "pie">("bar");
-    const [selectedFilter, setSelectedFilter] = useState("Full Year");
+    const [selectedFilter, setSelectedFilter] = useState<"Full Year" | "Quartal" | "Month">("Full Year");
+
+
     const [selectedDetail, setSelectedDetail] = useState("");
+    const { t } = useTranslation();
+
     const displayedMonths = selectedFilter === "Full Year"
         ? months
         : selectedFilter === "Quartal" && selectedDetail
@@ -56,6 +63,27 @@ const RevenueTable: React.FC<RevenueTableProps> = ({ monthData, categories, hide
         return { name: category, value: total };
     });
 
+    const monthMap = months.reduce((acc, eng) => {
+        acc[t(`months.${eng}`)] = eng; 
+        return acc;
+    }, {} as Record<string, string>);
+
+    const filterMap = {
+        [t("filter.fullYear")]: "Full Year",
+        [t("filter.quartal")]: "Quartal",
+        [t("filter.month")]: "Month",
+    };
+
+    const filterKeyMap = {
+        "Full Year": "fullYear",
+        "Quartal": "quartal",
+        "Month": "month",
+    } as const;
+
+    type FilterOption = keyof typeof filterKeyMap;
+
+
+
     return (
         <View style={styles.container}>
 
@@ -66,13 +94,19 @@ const RevenueTable: React.FC<RevenueTableProps> = ({ monthData, categories, hide
                         style={[styles.chartToggleButton, chartType === "bar" && styles.activeButton]}
                         onPress={() => setChartType("bar")}
                     >
-                        <Text style={[styles.chartToggleText, chartType === "bar" && styles.activeText]}>Bar Chart</Text>
+                        <Text style={[styles.chartToggleText, chartType === "bar" && styles.activeText]}>
+                            {t("chart.bar")}
+                        </Text>
+
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.chartToggleButton, chartType === "pie" && styles.activeButton]}
                         onPress={() => setChartType("pie")}
                     >
-                        <Text style={[styles.chartToggleText, chartType === "pie" && styles.activeText]}>Pie Chart</Text>
+                        <Text style={[styles.chartToggleText, chartType === "pie" && styles.activeText]}>
+                            {t("chart.pie")}
+                        </Text>
+
                     </TouchableOpacity>
                 </View>
             )}
@@ -102,22 +136,42 @@ const RevenueTable: React.FC<RevenueTableProps> = ({ monthData, categories, hide
             <View style={styles.filterContainer}>
                 <PeriodicDropdown
                     label="Pilih Periode"
-                    data={["Full Year", "Quartal", "Month"]}
-                    selectedValue={selectedFilter}
-                    onSelect={(value) => {
-                        setSelectedFilter(value);
+                    data={[
+                        t("filter.fullYear"),
+                        t("filter.quartal"),
+                        t("filter.month"),
+                    ]}
+                    selectedValue={t(`filter.${filterKeyMap[selectedFilter]}`)}
+
+                    onSelect={(val) => {
+                        const engFilter = filterMap[val] || val;
+                        if (Object.keys(filterKeyMap).includes(engFilter)) {
+                            setSelectedFilter(engFilter as FilterOption);
+                        }
+
                         setSelectedDetail("");
                     }}
                 />
 
+
                 {selectedFilter !== "Full Year" && (
                     <PeriodicDropdown
-                        label="Choose Filter"
-                        data={selectedFilter === "Quartal" ? Object.keys(quarters) : months}
+                        label={t("filter.chooseFilter")}
+                        data={selectedFilter === "Quartal"
+                            ? Object.keys(quarters)
+                            : months.map(m => t(`months.${m}`))}
                         selectedValue={selectedDetail}
-                        onSelect={setSelectedDetail}
+                        onSelect={(val) => {
+                            if (selectedFilter === "Month") {
+                                const engMonth = months.find(m => t(`months.${m}`) === val) || val;
+                                setSelectedDetail(engMonth);
+                            } else {
+                                setSelectedDetail(val);
+                            }
+                        }}
                         isSecondDropdown
                     />
+
                 )}
             </View>
 
@@ -145,8 +199,9 @@ const RevenueTable: React.FC<RevenueTableProps> = ({ monthData, categories, hide
                                         { minWidth: displayedMonths.length === 1 ? 120 : 85 }
                                     ]}
                                 >
-                                    {month}
+                                    {t(`months.${month}`)}
                                 </Text>
+
                             ))}
                             {/* TOTAL */}
                             <Text

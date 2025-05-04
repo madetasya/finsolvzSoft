@@ -6,7 +6,7 @@ const ReportSchema = new mongoose.Schema(
     reportType: { type: mongoose.Schema.Types.ObjectId, ref: "ReportType", required: true },
     year: { type: Number, required: true },
     company: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
-    currency: { type: String, default: "IDR" },
+    currency: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     userAccess: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     reportData: {

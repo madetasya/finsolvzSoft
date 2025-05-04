@@ -1,3 +1,4 @@
+import i18n from '../src/i18n'
 import React from 'react'
 import { useState } from 'react'
 import { BlurView } from 'expo-blur'
@@ -10,12 +11,9 @@ import axios from 'axios'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { RootStackParamList } from '../types'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import Constants from 'expo-constants';
-
+import { useTranslation } from 'react-i18next'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
-console.log("API URL >>>", API_URL);
-
 
 
 const styles = StyleSheet.create({
@@ -126,8 +124,10 @@ const styles = StyleSheet.create({
 
 })
 
+
 const LoginPage: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>()
+  const { t } = useTranslation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -138,10 +138,10 @@ const LoginPage: React.FC = () => {
   const [otpMessage, setOtpMessage] = useState('')
   const [otpMessageType, setOtpMessageType] = useState<'error' | 'info'>('info')
   const [otpLoading, setOtpLoading] = useState(false)
+  const [language, setLanguage] = useState(i18n.language || 'en')
 
   const scale = useSharedValue(1)
   const opacity = useSharedValue(1)
-
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
@@ -151,53 +151,42 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async () => {
     if (email.trim() === '' || password.trim() === '') {
-      setErrorMessage('Please fill in all fields');
-      return;
+      setErrorMessage(t('login.pleaseFillAllFields'))
+      return
     }
 
     try {
-      const response = await axios.post(`${API_URL}/login`, { email, password });
-
-      console.log("Login response GILAAAA:", response.data);
-
-      const { access_token } = response.data;
+      const response = await axios.post(`${API_URL}/login`, { email, password })
+      const { access_token } = response.data
 
       if (access_token) {
-        await AsyncStorage.setItem("authToken", access_token);
-        console.log("Login Success: Token saved");
+        await AsyncStorage.setItem('authToken', access_token)
+        const payload = JSON.parse(atob(access_token.split('.')[1]))
+        const userRole = payload.role
 
-        // decode token untuk ambil role
-        const payload = JSON.parse(atob(access_token.split('.')[1]));
-        const userRole = payload.role;
-
-        console.log("User ROLE  ", userRole);
-
-        if (userRole === "CLIENT") {
+        if (userRole === 'CLIENT') {
           navigation.reset({
             index: 0,
-            routes: [{ name: "ClientHomePage" }],
-          });
+            routes: [{ name: 'ClientHomePage' }],
+          })
         } else {
           navigation.reset({
             index: 0,
-            routes: [{ name: "Home" }],
-          });
+            routes: [{ name: 'Home' }],
+          })
         }
       } else {
-        console.log("LOGIN GAGAL NO TOKEN BROOOO");
-        setErrorMessage('Something wrong');
+        setErrorMessage(t('login.wrongEmailOrPassword'))
       }
     } catch (error) {
-      console.log("LOGIN ERROR BROO >>>>", error);
-      setErrorMessage('Wrong email or password');
+      setErrorMessage(t('login.wrongEmailOrPassword'))
     }
-  };
-
+  }
 
   const handleForgotPassword = async () => {
     if (otpEmail.trim() === '') {
       setOtpMessageType('error')
-      setOtpMessage('Invalid email address')
+      setOtpMessage(t('login.invalidEmailAddress'))
       return
     }
     setOtpLoading(true)
@@ -206,28 +195,22 @@ const LoginPage: React.FC = () => {
       const response = await axios.post(`${API_URL}/forgot-password`, {
         email: otpEmail,
       })
-      console.log("FORGOT PASSWORD SUCCESS >>>>", response.data)
-
       setOtpMessageType('info')
-      setOtpMessage('OTP sent! Check your email')
+      setOtpMessage(t('login.newPasswordSent'))
     } catch (error) {
-      console.log("FORGOT PASSWORD ERROR ANJAY >>>>", error)
-
       setOtpMessageType('error')
-      if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.message) {
-        setOtpMessage('User Not Found')
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        setOtpMessage(t('login.userNotFound'))
       } else {
-        setOtpMessage('Invalid Input')
+        setOtpMessage(t('login.invalidInput'))
       }
     } finally {
       setOtpLoading(false)
     }
   }
 
-
   return (
     <View style={styles.container}>
-
       <Video
         source={require('../assets/Video.mp4')}
         rate={1.0}
@@ -244,25 +227,59 @@ const LoginPage: React.FC = () => {
         style={styles.gradient}
       />
       <View style={styles.bottomBackground} />
+      <View style={{ position: 'absolute', top: 48, right: 24, zIndex: 20, flexDirection: 'row' }}>
+        <Text
+          onPress={async () => {
+            i18n.changeLanguage('zh')
+            setLanguage('zh')
+            await AsyncStorage.setItem('selectedLanguage', 'zh')
+          }}
+          style={{
+            color: language === 'zh' ? '#2BA787' : '#E2E4D7',
+            fontFamily: 'UbuntuBold',
+            fontSize: 14,
+            marginRight: 8,
+          }}
+        >
+          {t('login.language.zh')}
+        </Text>
+        <Text style={{ color: '#E2E4D7', fontSize: 14, marginHorizontal: 4 }}>|</Text>
+        <Text
+          onPress={async () => {
+            i18n.changeLanguage('en')
+            setLanguage('en')
+            await AsyncStorage.setItem('selectedLanguage', 'en')
+          }}
+          style={{
+            color: language === 'en' ? '#2BA787' : '#E2E4D7',
+            fontFamily: 'UbuntuBold',
+            fontSize: 14,
+            marginLeft: 8,
+          }}
+        >
+          {t('login.language.en')}
+        </Text>
+      </View>
+
       <Image
         source={require('../assets/image/LogoHorizontal.png')}
         style={styles.logo}
       />
 
-      {/* JARGON */}
-      {/* JARGON */}
       <View style={styles.containerForm}>
-        <Text style={styles.jargonLine1}>The
-          <Text style={styles.jargonAccent}> future</Text></Text>
-        <Text style={styles.jargonLine2}>of financial
-          <Text style={styles.jargonAccent}> clarity</Text></Text>
-        <Text style={styles.instructionText}>
-          Log in to your account
+        <Text style={styles.jargonLine1}>
+          {t('login.jargon1.part1')}
+          <Text style={styles.jargonAccent}> {t('login.jargon1.accent')}</Text>
+        </Text>
+        <Text style={styles.jargonLine2}>
+          {t('login.jargon2.part1')}
+          <Text style={styles.jargonAccent}> {t('login.jargon2.accent')}</Text>
         </Text>
 
+        <Text style={styles.instructionText}>
+          {t('login.loginInstruction')}
+        </Text>
 
-        {/* FORM */}
-        {/* FORM */}
         <HelperText
           type="error"
           visible={errorMessage.length > 0}
@@ -274,7 +291,7 @@ const LoginPage: React.FC = () => {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
-          placeholder="Email"
+          placeholder={t('login.emailPlaceholder')}
           mode="flat"
           underlineColor="#E2E4D7"
           placeholderTextColor="rgba(226, 228, 215, 0.58)"
@@ -282,17 +299,16 @@ const LoginPage: React.FC = () => {
           textColor="#E2E4D7"
           style={[
             styles.formInput,
-            { backgroundColor: 'transparent', fontFamily: 'UbuntuLightItalic', }
+            { backgroundColor: 'transparent', fontFamily: 'UbuntuLightItalic' }
           ]}
           contentStyle={{ fontFamily: email.length > 0 ? 'UbuntuRegular' : 'UbuntuLightItalic', paddingLeft: 0 }}
         />
 
-        {/* PASS FORM */}
         <TextInput
           autoCapitalize="none"
           value={password}
           onChangeText={setPassword}
-          placeholder="Password"
+          placeholder={t('login.passwordPlaceholder')}
           mode="flat"
           underlineColor="#E2E4D7"
           activeUnderlineColor="#2BA787"
@@ -313,9 +329,6 @@ const LoginPage: React.FC = () => {
           }
         />
 
-
-        {/* FORGOT PASSWORD */}
-        {/* FORGOT PASSWORD */}
         <Text
           onPress={() => {
             setOtpEmail(email)
@@ -328,12 +341,9 @@ const LoginPage: React.FC = () => {
             fontSize: 14,
           }}
         >
-          Forgot Password?
+          {t('login.forgotPassword')}
         </Text>
 
-
-        {/* SIGN IN BUTTON */}
-        {/* SIGN IN BUTTON */}
         <Pressable
           style={{ width: '100%', alignItems: 'center' }}
           onPressIn={() => {
@@ -344,22 +354,16 @@ const LoginPage: React.FC = () => {
             scale.value = withTiming(1, { duration: 100 })
             opacity.value = withTiming(1, { duration: 100 })
           }}
-          onPress={() => {
-            handleLogin()
-          }}
+          onPress={handleLogin}
         >
           <Animated.View style={[styles.buttonLogin, animatedStyle]}>
             <Text style={styles.buttonLoginText}>
-              SIGN IN
+              {t('login.signIn')}
             </Text>
           </Animated.View>
         </Pressable>
-
       </View>
 
-
-      {/* MODAL */}
-      {/* MODAL */}
       {modalVisible && (
         <>
           <BlurView
@@ -380,8 +384,6 @@ const LoginPage: React.FC = () => {
         </>
       )}
 
-
-      {/* MODAL */}
       <Portal>
         <Modal
           visible={modalVisible}
@@ -394,11 +396,6 @@ const LoginPage: React.FC = () => {
             zIndex: 20,
           }}
         >
-
-          {/* MODAL FORM */}
-          {/* MODAL FORM */}
-
-          {/* TITLE */}
           <Text style={{
             color: '#E2E4D7',
             fontFamily: 'UbuntuMedium',
@@ -406,15 +403,14 @@ const LoginPage: React.FC = () => {
             marginBottom: 16,
             textAlign: 'center',
           }}>
-            Send OTP
+            {t('login.sendNewPasswordTitle')}
           </Text>
 
-          {/* FORM EMAIL */}
           <TextInput
             autoCapitalize="none"
             value={otpEmail}
             onChangeText={setOtpEmail}
-            placeholder="Enter your email"
+            placeholder={t('login.enterYourEmail')}
             mode="flat"
             underlineColor="#E2E4D7"
             activeUnderlineColor="#2BA787"
@@ -422,7 +418,6 @@ const LoginPage: React.FC = () => {
             textColor="#E2E4D7"
             style={{
               backgroundColor: 'transparent',
-
             }}
             contentStyle={{
               fontFamily: 'UbuntuLight',
@@ -432,7 +427,6 @@ const LoginPage: React.FC = () => {
             }}
           />
 
-          {/* HELPER OTP */}
           <HelperText
             type={otpMessageType}
             visible={otpMessage.length > 0}
@@ -447,7 +441,6 @@ const LoginPage: React.FC = () => {
             {otpMessage}
           </HelperText>
 
-          {/* CANCEL BUTTON */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Button
               mode="outlined"
@@ -463,10 +456,9 @@ const LoginPage: React.FC = () => {
                 fontSize: 16,
               }}
             >
-              Cancel
+              {t('login.cancel')}
             </Button>
 
-            {/* SEND OTP BUTTON */}
             <Button
               mode="contained"
               buttonColor="#2BA787"
@@ -475,24 +467,24 @@ const LoginPage: React.FC = () => {
               style={{
                 flex: 1,
                 marginLeft: 8,
+        
               }}
               labelStyle={{
                 fontFamily: 'UbuntuMedium',
                 fontSize: 16,
               }}
             >
-
-              Send OTP
+              {t('login.send')}
             </Button>
           </View>
         </Modal>
       </Portal>
-
-
     </View>
+
+    
   )
+
+  
 }
-
-
 
 export default LoginPage

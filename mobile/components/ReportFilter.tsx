@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, JSX } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,12 @@ import {
   Dimensions,
   FlatList,
   ActivityIndicator,
+  ScrollView,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +29,7 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
   const [reportTypes, setReportTypes] = useState<{ _id: string; name: string }[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
@@ -34,7 +38,7 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
       setLoading(true);
       const token = await AsyncStorage.getItem("authToken");
       if (!token) {
-        console.error("No auth token found");
+        Alert.alert("Oops", "Something went wrong, try again later.");
         return;
       }
 
@@ -49,7 +53,7 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
         onFilterChange(defaultCompany, []);
       }
     } catch (error) {
-      console.error("Error fetching companies:", error);
+      Alert.alert("Oops", "Something went wrong, try again later.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +76,7 @@ const fetchReportTypes = async (companyId: string) => {
 
       setReportTypes(uniqueReportTypes);
     } catch (error) {
-      console.error("Error fetching report types:", error);
+      Alert.alert("Oops", "Something went wrong, try again later.");
     } finally {
       setLoading(false);
     }
@@ -104,7 +108,8 @@ const fetchReportTypes = async (companyId: string) => {
   return (
     <View style={[styles.filterContainer, isOpen && styles.filterContainerOpen]}>
       <View style={styles.dropdownContainers}>
-        <Text style={styles.chooseText}>Choose Company</Text>
+        <Text style={styles.chooseText}>{t("chooseCompany")}</Text>
+
         <TouchableOpacity style={styles.dropdown} onPress={toggleDropdown}>
           {loading ? (
             <ActivityIndicator size="small" color="#253d3d" />
@@ -112,12 +117,14 @@ const fetchReportTypes = async (companyId: string) => {
             <Text style={styles.dropdownText}>
               {selectedCompany
                 ? companyList.find((c) => c._id === selectedCompany)?.name
-                : "Select Company"}
+                  : t("selectCompany")
+}
             </Text>
           )}
         </TouchableOpacity>
 
-        <Text style={styles.chooseText}>Choose Report Type</Text>
+        <Text style={styles.chooseText}>{t("chooseReportType")}</Text>
+
         {isOpen && !loading && (
           <View style={styles.dropdownContainer}>
             <FlatList
@@ -145,34 +152,35 @@ const fetchReportTypes = async (companyId: string) => {
           </View>
         )}
       </View>
-      <View style={styles.buttonContainer}>
+      <ScrollView style={styles.buttonContainer} horizontal showsHorizontalScrollIndicator={false}>
         {loading ? (
           <Text style={{ color: '#A0A0A0', fontStyle: 'italic', fontFamily: 'UbuntuLightItalic', paddingLeft: 16, marginBottom: 16 }}>
             Fetching data...
           </Text>
         ) : (
-          reportTypes.slice(0, 3).map((reportType) => (
-            <TouchableOpacity
-              key={reportType._id}
-              style={[
-                styles.button,
-                selectedTypes.includes(reportType._id) && styles.buttonSelected,
-              ]}
-              onPress={() => toggleReportType(reportType._id)}
-            >
-              <Text
+            reportTypes.slice(0, 3).map((reportType) => (
+              <TouchableOpacity
+                key={reportType._id}
                 style={[
-                  styles.buttonText,
-                  selectedTypes.includes(reportType._id) && styles.buttonTextSelected,
+                  styles.button,
+                  selectedTypes.includes(reportType._id) && styles.buttonSelected,
                 ]}
+                onPress={() => toggleReportType(reportType._id)}
               >
-                {reportType.name}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    selectedTypes.includes(reportType._id) && styles.buttonTextSelected,
+                  ]}
+                >
+                  {t(`reportTypes.${reportType.name}`)}
+                </Text>
+              </TouchableOpacity>
           ))
         )}
 
-      </View>
+      </ScrollView>
+
 
     </View>
   );
@@ -244,6 +252,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   buttonContainer: {
+  marginTop: -16,
   marginLeft: 16,
   },
   button: {
@@ -255,7 +264,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     marginHorizontal: 5,
     marginBottom: 16,
-    marginTop: -24,
+    
   },
   buttonSelected: {
     borderWidth: 0,

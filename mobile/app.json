@@ -4,14 +4,15 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/image/LargeFinsolvz.png",
-    "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "icon": "./assets/image/LogoHorizontal.png",
     "splash": {
       "image": "./assets/image/LogoHorizontal.png",
       "resizeMode": "cover",
-      "backgroundColor": "#011414;"
+      "backgroundColor": "#011414"
     },
+
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "finsolvz.beta",
@@ -23,24 +24,29 @@
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/image/logoFinsolvz.png",
-        "backgroundColor":  "#011414;"
+        "backgroundColor": "#011414"
+      },
+
+      "androidStatusBar": {
+        "backgroundColor": "#011414",
+        "barStyle": "dark-content"
+      },
+      "androidNavigationBar": {
+        "backgroundColor": "#011414",
+        "barStyle": "light-content"
       },
       "package": "finsolvz.beta"
     },
     "web": {
       "favicon": "./assets/image/FinsolvzLogo.png"
     },
-  "extra": {
+    "extra": {
       "EXPO_PUBLIC_API_URL": "http://192.168.68.115:8787",
       "eas": {
         "projectId": "8d732c17-06ab-40ae-b834-8d798cf2bd27"
       }
     },
 
-    "plugins": [
-      "expo-secure-store",
-      "expo-router",
-      "expo-font"
-    ]
+    "plugins": ["expo-secure-store", "expo-router", "expo-font"]
   }
 }

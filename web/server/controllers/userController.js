@@ -1,5 +1,5 @@
-dotenv.config();
 import dotenv from "dotenv";
+dotenv.config();
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import send from "../helpers/nodemailer.js";
@@ -7,6 +7,8 @@ import { hashPassword, comparePassword } from "../helpers/bcrypt.js";
 import { generateToken } from "../helpers/jwt.js";
 import redis from "../config/redis.js";
 import User from "../models/UserModel.js";
+import jwt from "jsonwebtoken";
+
 
 const getLoginUser = async (req, res, next) => {
   try {
@@ -179,87 +181,76 @@ const logout = async (req, res) => {
 };
 
 
-
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ msg: "Email not found" });
+      return res.status(404).json({ message: "User not found" });
     }
+    const newPassword = crypto.randomBytes(6).toString("hex");
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    const token = crypto.randomBytes(20).toString("hex");
-    const expires = Date.now() + 3600000; // 1 jamm
-
-    user.resetPasswordToken = token;
-    user.resetPasswordExpires = expires;
+    user.password = hashedPassword;
     await user.save();
 
-    const resetLink = `https://localhost:3000/reset-password?token=${token}`;
-    const displayName = user.name ? user.name.charAt(0).toUpperCase() + user.name.slice(1) : "Valued User";
 
-    const messageText = `Dear ${displayName},
-
-We have received a request to reset the password associated with your Finsolvz account.
-
-If you initiated this request, please use the link below to create a new password:
-
-${resetLink}
-
-Please note that this link will expire in 1 hour for security reasons.
-
-If you did not request a password reset, no action is required. However, we recommend updating your password as a precaution.
-
-Sincerely,
-The Finsolvz by Adviz Team`;
-
-    const logoURL = "https://res.cloudinary.com/yourcloud/image/upload/v1710000000/finsolvz-logo.png";
-
-    const messageHTML = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <div style="text-align: left; margin-bottom: 20px;">
-          <img src="${logoURL}" alt="Finsolvz Logo" style="height: 40px;">
+    await send({
+      to: email,
+      subject: "Your New Finsolvz Account Password",
+      text: `Dear ${user.name},\n\nWe have received a request to reset your password for your Finsolvz account.\n\nHere is your new password:\nPassword: ${newPassword}\n\nPlease use this password to log in to your account. For security reasons, we recommend changing your password after logging in.\n\nIf you did not request this change, please contact our support team immediately.\n\nBest regards,\nFinsolvz Team`,
+      html: `
+        <div style="font-family: sans-serif; line-height: 1.6;">
+          <p>Dear <strong>${user.name}</strong>,</p>
+          <p>We have received a request to reset your password for your <strong>Finsolvz</strong> account.</p>
+          <p>Here is your new password:</p>
+          <p style="font-size: 18px; font-weight: bold;">${newPassword}</p>
+          <p>Please use this password to log in to your account. For security reasons, we strongly recommend changing your password after logging in.</p>
+          <p>If you did not request this change, please contact our support team immediately.</p>
+          <p style="margin-top: 24px;">Best regards,<br/>Finsolvz</p>
         </div>
-
-        <p>Dear ${displayName},</p>
-
-        <p>We have received a request to reset the password associated with your <strong>Finsolvz</strong> account.</p>
-
-        <p>If you initiated this request, please click the button below to create a new password:</p>
-
-        <p style="text-align: center; margin: 30px 0;">
-          <a href="${resetLink}" 
-             style="background-color: #1D4ED8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-            Reset Password
-          </a>
-        </p>
-
-        <p><strong>Note:</strong> This link will expire in 1 hour for security reasons.</p>
-
-        <p>If you did not request this password reset, no further action is required. However, we recommend updating your password as a precaution.</p>
-
-        <p>If you have any questions or need assistance, please do not hesitate to contact our support team.</p>
-
-        <p style="margin-top: 40px;">Sincerely,<br/>The Finsolvz by Adviz Team</p>
-      </div>
-    `;
-
-    await send.sendMail({
-      from: process.env.NODEMAILER_EMAIL,
-      to: user.email,
-      subject: "Reset Your Password - Finsolvz",
-      text: messageText,
-      html: messageHTML,
+      `,
     });
 
-    res.json({ msg: "Password reset link sent to your email." });
+    return res.json({ message: "New password has been sent to your email" });
   } catch (err) {
-    console.error("ERROR SENDING RESET EMAIL >>>", err);
-    res.status(500).json({ msg: "Failed to send reset email." });
+    console.error("Forgot password error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded._id;
+
+    const { newPassword, confirmPassword } = req.body;
+
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+    res.status(200).json({ message: "Password successfully changed" });
+  } catch (err) {
+    console.error("CHANGE PASSWORD ERROR >>>", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 const resetPassword = async (req, res, next) => {
   try {
@@ -397,6 +388,7 @@ export default {
   getUserByName,
   register,
   forgotPassword,
+  changePassword,
   resetPassword,
   updateRole,
   updateUser,

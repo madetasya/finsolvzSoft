@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const send = async (to, subject, text) => {
+const send = async ({ to, subject, text, html }) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -10,10 +10,11 @@ const send = async (to, subject, text) => {
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"Finsolvz" <${process.env.NODEMAILER_EMAIL}>`,
     to,
     subject,
     text,
+    html,
   };
 
   return transporter.sendMail(mailOptions);

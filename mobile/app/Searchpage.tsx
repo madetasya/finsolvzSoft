@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Searchbar, ActivityIndicator } from "react-native-paper";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,6 +14,9 @@ const SearchPage = ({ navigation }: any) => {
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
+    const [accessibleCompanyIds, setAccessibleCompanyIds] = useState<string[]>([]);
+
+
 
     useEffect(() => {
         if (searchQuery.length === 0) {
@@ -54,14 +57,24 @@ const SearchPage = ({ navigation }: any) => {
                     setUsers(allUsers.data);
                     setCompanies(allCompanies.data);
                 } else if (userRes.data.role === "CLIENT") {
-                    const [userReports, createdReports] = await Promise.all([
+                    const [userReports, createdReports, userCompanies] = await Promise.all([
                         axios.get(`${API_URL}/reports/userAccess/${userRes.data._id}`, { headers: { Authorization: `Bearer ${token}` } }),
                         axios.get(`${API_URL}/reports/createdBy/${userRes.data._id}`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/user/companies`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        })
                     ]);
-                    setReports([...userReports.data, ...createdReports.data]);
+                    const combinedReports = [...userReports.data, ...createdReports.data]
+                    const companyIds = userCompanies.data.map((c: any) => c._id)
+                    const filtered = combinedReports.filter((report) =>
+                        companyIds.includes(report.company?._id)
+                    )
+
+                    setReports(filtered)
+                    setAccessibleCompanyIds(companyIds)
                 }
             } catch (error) {
-                console.error("error fetching search data >>>", error);
+                Alert.alert("Oops", "Something went wrong, try again later.");
             } finally {
                 setLoading(false);
             }
@@ -70,18 +83,45 @@ const SearchPage = ({ navigation }: any) => {
         fetchData();
     }, []);
 
+    const handlePressReport = (report: any) => {
+        if (userRole === "CLIENT") {
+            if (report.reportType?.name === "Revenue") {
+                navigation.navigate("RevenuePage", { reportId: report._id });
+            } else {
+                navigation.navigate("BSPLPage", { reportId: report._id });
+            }
+        } else {
+            navigation.navigate("ReportDetail", { reportId: report._id });
+        }
+    };
+
+
+    const handlePressUser = (user: any) => {
+        navigation.navigate("UserList", { selectedUser: user });
+    };
+
+    const handlePressCompany = (company: any) => {
+        navigation.navigate("CompanyList", { selectedCompany: company });
+    };
     const filteredReports = reports.filter((item) => {
-        const matchQuery = item.reportName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchName = item.reportName.toLowerCase().includes(searchQuery.toLowerCase())
 
         if (userRole === "CLIENT") {
             const hasAccess =
-                item.userAccess?.includes(userId) || item.createdBy === userId;
-            return matchQuery && hasAccess;
+                item.userAccess?.some((u: any) => (typeof u === "object" ? u._id === userId : u === userId)) ||
+                item.createdBy === userId
+
+            const sameCompany = accessibleCompanyIds.includes(item.company?._id)
+
+            if (hasAccess && sameCompany) {
+                return matchName
+            }
+
+            return false
         }
 
-        return matchQuery;
-    });
-
+        return matchName
+    })
 
     const filteredUsers = users.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -94,7 +134,7 @@ const SearchPage = ({ navigation }: any) => {
     const hasResults = filteredReports.length > 0 || filteredUsers.length > 0 || filteredCompanies.length > 0;
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#314E4A', paddingTop: 40, paddingHorizontal: 16 }}>
+        <View style={{ flex: 1, backgroundColor: '#314E4A', paddingTop: 40, paddingHorizontal: 16, paddingBottom: 48 }}>
             <Searchbar
                 placeholder="Search..."
                 value={searchQuery}
@@ -121,11 +161,13 @@ const SearchPage = ({ navigation }: any) => {
                         <>
                             {userRole !== "CLIENT" && filteredUsers.length > 0 && (
                                 <>
-                                        <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginBottom: 8, fontSize: 16, letterSpacing: 1.8, }}>USERS</Text>
-                                    {filteredUsers.map((user, index) => (
-                                        <View key={index} style={{ marginBottom: 8 }}>
-                                            <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuMedium' }}>{user.name}</Text>
-                                            <Text style={{ color: '#A0A0A0', fontFamily: 'UbuntuLightItalic', fontSize: 12 }}>{user.role}</Text>
+                                    <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginBottom: 8, fontSize: 16, letterSpacing: 1.8, }}>USERS</Text>
+                                    {filteredUsers.map((user) => (
+                                        <View key={user._id} style={{ marginBottom: 8 }}>
+                                            <TouchableOpacity onPress={() => handlePressUser(user)}>
+                                                <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuMedium' }}>{user.name}</Text>
+                                                <Text style={{ color: '#A0A0A0', fontFamily: 'UbuntuLightItalic', fontSize: 12 }}>{user.role}</Text>
+                                            </TouchableOpacity>
                                         </View>
                                     ))}
                                 </>
@@ -133,11 +175,13 @@ const SearchPage = ({ navigation }: any) => {
 
                             {filteredReports.length > 0 && (
                                 <>
-                                        <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>REPORTS</Text>
-                                    {filteredReports.map((report, index) => (
-                                        <View key={index} style={{ marginBottom: 8 }}>
-                                            <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuMedium' }}>{report.reportName}</Text>
-                                            <Text style={{ color: '#A0A0A0', fontFamily: 'UbuntuLightItalic', fontSize: 12 }}>{report.company?.name || 'No Company'}</Text>
+                                    <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>REPORTS</Text>
+                                    {filteredReports.map((report) => (
+                                        <View key={report._id} style={{ marginBottom: 8 }}>
+                                            <TouchableOpacity onPress={() => handlePressReport(report)}>
+                                                <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuMedium' }}>{report.reportName}</Text>
+                                                <Text style={{ color: '#A0A0A0', fontFamily: 'UbuntuLightItalic', fontSize: 12 }}>{report.company?.name || 'No Company'}</Text>
+                                            </TouchableOpacity>
                                         </View>
                                     ))}
                                 </>
@@ -145,10 +189,13 @@ const SearchPage = ({ navigation }: any) => {
 
                             {userRole !== "CLIENT" && filteredCompanies.length > 0 && (
                                 <>
-                                        <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>COMPANIES</Text>
-                                    {filteredCompanies.map((company, index) => (
-                                        <Text key={index} style={{ color: '#E2E4D7', marginBottom: 4, fontFamily: 'UbuntuMedium' }}>{company.name}</Text>
-                                    ))}
+                                    <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>COMPANIES</Text>
+                                        {filteredCompanies.map((company) => (
+                                            <TouchableOpacity key={company._id} onPress={() => handlePressCompany(company)}>
+                                                <Text style={{ color: '#E2E4D7', marginBottom: 4, fontFamily: 'UbuntuMedium' }}>{company.name}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+
                                 </>
                             )}
                         </>

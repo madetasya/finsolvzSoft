@@ -82,7 +82,7 @@ const CreateReportPage = () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
             if (!token) {
-                console.error("No auth token found");
+                Alert.alert("Oops", "Something went wrong, try again later.");
                 return;
             }
             const res = await axios.get(`${API_URL}/reportTypes`, {
@@ -92,7 +92,7 @@ const CreateReportPage = () => {
             setReportTypes(res.data);
 
         } catch (err) {
-            console.error("Error fetching report types", err);
+            Alert.alert("Oops", "Error fetching report types, try again later.");
         }
     };
 
@@ -119,7 +119,6 @@ const CreateReportPage = () => {
                 Alert.alert("Error", "This feature not available for your device");
             }
         } catch (error) {
-            console.error("Error downloading template:", error);
             Alert.alert("Error", "Failed to download the template.");
         }
     };
@@ -221,23 +220,23 @@ const CreateReportPage = () => {
                 reportData: reportData,
             };
 
-            console.log("THIS IS PAYLOAAADDD >>>>", payload);
+            // console.log("THIS IS PAYLOAAADDD >>>>", payload);
 
             if (reportId) {
                 await axios.put(`${API_URL}/reports/${reportId}`, payload, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log("UPDATE REPORT SUCCESS >>>>");
+                // console.log("UPDATE REPORT SUCCESS >>>>");
                 Alert.alert("Success!", "Report updated successfully.");
             } else {
                 await axios.post(`${API_URL}/reports`, payload, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log("SAVED REPORT WOHOOOO >>>>");
+                // console.log("SAVED REPORT WOHOOOO >>>>");
                 Alert.alert("Success!", "Report saved successfully.");
             }
         } catch (err) {
-            console.log("ERRORR SAVE REPORTTTT >>>>", err);
+            // console.log("ERRORR SAVE REPORTTTT >>>>", err);
             Alert.alert("Error", "Failed to save the report.");
         }
     };
@@ -249,7 +248,7 @@ const CreateReportPage = () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
             if (!token) {
-                console.error("No auth token found");
+                Alert.alert("Oops", "Something went wrong, try again later.");
                 return;
             }
 
@@ -258,7 +257,7 @@ const CreateReportPage = () => {
             });
             setCompanies(res.data);
         } catch (err) {
-            console.error("Error fetching companies", err);
+            Alert.alert("Something Wrong", "Error fetching company data, try again later.");
         }
     };
 
@@ -267,7 +266,7 @@ const CreateReportPage = () => {
             const res = await axios.get(`${API_URL}/users`);
             setUsers(res.data);
         } catch (err) {
-            console.error("Error fetching users", err);
+            Alert.alert("Something Wrong", "Error fetching user data, try again later.");
         }
     };
 
@@ -275,7 +274,7 @@ const CreateReportPage = () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
             if (!token) {
-                console.error("No auth token found");
+                Alert.alert("Oops", "Something went wrong, try again later.");
                 return;
             }
             const res = await axios.get(`${API_URL}/reports/${id}`, {
@@ -295,7 +294,7 @@ const CreateReportPage = () => {
             setJsonHeader(data.reportData?.jsonHeader || defaultHeaders);
             setJsonData(data.reportData?.jsonData || [["", "", "", ""]]);
         } catch (err) {
-            console.error("Error fetching report detail", err);
+            Alert.alert("Something Wrong", "Error fetching report detail, try again later.");
         }
     };
 
@@ -342,7 +341,7 @@ const CreateReportPage = () => {
 
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 } }>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton}>
                     <Text style={styles.backButtonText}>←</Text>
