@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
 } from "react-native"
 
+
 interface BSPLTableProps {
     headers: string[]
     data: (string | number | null | undefined)[][]
@@ -79,15 +80,22 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                         }}
                         activeOpacity={showArrow ? 0.6 : 1}
                     >
-                        <View style={{ width: 160 }}>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.labelText}>
+                        <View >    
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={true}
+                                scrollEnabled={true}
+                                style={{ maxWidth: 180 }}
+                                
+                            >
+                                <Text style={styles.labelText}>
                                     {showArrow ? (openKeys.includes(key) ? "▼ " : "▶ ") : ""}
                                     {l1}
                                 </Text>
                             </ScrollView>
                         </View>
                     </TouchableOpacity>
+
                 )
             }
 
@@ -103,13 +111,19 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                             isProfitRow(labelText?.toString()) && styles.profitRow,
                         ]}
                     >
-                        <View style={{ width: 160 }}>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.labelText}>
+                        <View style={{ minWidth: 160 }}>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={true}
+                                style={{ minWidth: 160 }}
+                                scrollEnabled={true}
+                            >
+                                <Text style={styles.labelText}>
                                     {labelText}
                                 </Text>
                             </ScrollView>
                         </View>
+
                     </View>
                 )
             }
@@ -168,12 +182,16 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
     }
 
     return (
-        <View style={[styles.wrapper, { width: 180 + valueHeaders.length * 100 }]}>
-            <View style={styles.table}>
+        <View style={[styles.wrapper, { width: 182 + valueHeaders.length * 168 }]}>
+            <View style={[styles.table, { width: 182 + valueHeaders.length * 108 }]}>
                 <View style={styles.labelColumn}>
                     <View style={styles.labelCell}>
-                        <View style={{ width: 160 }}>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={{ minWidth: 160 }}>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={true}
+                                style={{ maxWidth: 160 }}
+                            >
                                 <Text style={styles.headerText}></Text>
                             </ScrollView>
                         </View>
@@ -181,7 +199,7 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                     {renderLabelRows()}
                 </View>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={true}>
                     <View>
                         <View style={styles.valueRow}>
                             {valueHeaders.map((h, idx) => (
@@ -214,13 +232,14 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         alignSelf: "center",
-        paddingHorizontal: 16,
+        paddingHorizontal: 34,
     },
     table: {
         flexDirection: "row",
         alignItems: "center",
         alignSelf: "center",
         backgroundColor: "#fff",
+    
     },
     labelColumn: {
         flexShrink: 0,
@@ -229,12 +248,14 @@ const styles = StyleSheet.create({
     labelCell: {
         borderBottomColor: "#eee",
         borderBottomWidth: 1,
-        padding: 12
+        padding: 12,
+        paddingRight: 8,
     },
     labelText: {
         fontWeight: "bold",
         color: "#333",
-        paddingLeft: 12,
+        paddingLeft: 36,
+        paddingRight: 24,
     },
     headerText: {
         fontWeight: "bold",

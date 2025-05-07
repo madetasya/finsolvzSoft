@@ -17,11 +17,12 @@ import { useRoute, RouteProp } from "@react-navigation/native"
 import { RootStackParamList } from "../types"
 import BSPLTable from "../components/BSPLTable"
 import { useTranslation } from "react-i18next"
+import i18n from '../src/i18n'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
 const BSPLPage: React.FC = () => {
-    const route = useRoute<RouteProp<RootStackParamList, "BSPL">>()
+    const route = useRoute<RouteProp<RootStackParamList, "BSPLPage">>()
     const { reportId } = route.params
 
     const [report, setReport] = useState<any | null>(null)
@@ -29,6 +30,8 @@ const BSPLPage: React.FC = () => {
     const [selectedYears, setSelectedYears] = useState<string[]>([])
     const [yearModalVisible, setYearModalVisible] = useState(false)
     const [labelColumnCount, setLabelColumnCount] = useState(1)
+      const { t } = useTranslation();
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -105,9 +108,12 @@ const BSPLPage: React.FC = () => {
                                 onPress={() => setYearModalVisible(true)}
                                 style={styles.modalToggleButton}
                             >
-                                <Text style={styles.modalToggleText}>
-                                    {selectedYears.length > 0 ? `Selected (${selectedYears.length})` : "Choose Years"}
-                                </Text>
+                                    <Text style={styles.modalToggleText}>
+                                        {selectedYears.length > 0
+                                            ? `${t("selected")} (${selectedYears.length})`
+                                            : t("chooseYears")}
+                                    </Text>
+
                             </TouchableOpacity>
                         </View>
 
@@ -119,7 +125,7 @@ const BSPLPage: React.FC = () => {
                         >
                             <View style={styles.modalBackdrop}>
                                 <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>Choose Years</Text>
+                                    <Text style={styles.modalTitle}>{t("chooseYears")}</Text>
                                     <ScrollView style={{ maxHeight: 200 }}>
                                         {report.jsonHeaderParsed.map((year: string) => (
                                             <TouchableOpacity
@@ -143,7 +149,7 @@ const BSPLPage: React.FC = () => {
                                     </ScrollView>
 
                                     <Pressable onPress={() => setYearModalVisible(false)} style={styles.modalCloseButton}>
-                                        <Text style={{ color: "#fff" }}>Done</Text>
+                                            <Text style={{ color: "#fff" }}>{t("done")}</Text>
                                     </Pressable>
                                 </View>
                             </View>

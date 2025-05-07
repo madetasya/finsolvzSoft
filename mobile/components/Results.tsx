@@ -105,8 +105,8 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
                   reportId: item._id,
                   companyId: selectedCompany ?? undefined,
                   reportType: item.reportType?._id,
-                  selectedCompany: selectedCompany ?? undefined,
                 });
+
 
 
 

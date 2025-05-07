@@ -19,7 +19,6 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [userName, setUserName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const screenHeight = Dimensions.get("window").height;
-    const [userRole, setUserRole] = useState<string | null>(null);
     const [user, setUser] = useState<any | null>(null);
 
 
@@ -44,7 +43,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             try {
                 const token = await AsyncStorage.getItem("authToken");
                 const lang = await AsyncStorage.getItem("selectedLanguage");
-                if (lang) i18n.changeLanguage(lang); // Set bahasa
+                if (lang) i18n.changeLanguage(lang); 
                 if (!token) return;
 
                 const response = await axios.get(`${API_URL}/loginUser`, {

@@ -29,7 +29,7 @@
   },
   "welcome": "欢迎,",
   "changePassword": "更改密码",
-  "signOut": "登出",
+  "signOut": "退出登录",
   "close": "关闭",
   "newPassword": "新密码",
   "confirmPassword": "确认新密码",
@@ -78,5 +78,8 @@
   "chart": {
     "bar": "柱状图",
     "pie": "饼图"
-  }
+  },
+  "chooseYears": "选择年份",
+  "selected": "已选择",
+  "done":"完成"
 }

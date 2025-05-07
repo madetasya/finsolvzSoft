@@ -4,7 +4,7 @@ export type RootStackParamList = {
   SearchPage: undefined;
   CreateReport: undefined;
   ClientHomePage: undefined;
-  BSPL: { reportId: string; selectedCompany?: string };
+  BSPLPage: { reportId: string; companyId: string; reportType: string }
   Revenue: {
     reportId: string;
     selectedCompany: string | null;
