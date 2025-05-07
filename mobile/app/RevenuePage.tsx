@@ -185,10 +185,10 @@ const RevenuePage: React.FC = () => {
         <ActivityIndicator size="large" color="#6c918b" style={styles.loading} />
       ) : (
         <View>
-          <Text style={styles.title}>{report?.reportName || "No Report Found"}</Text>
-          <Text style={styles.detailReport}>{report?.reportType?.name || "Unknown"}</Text>
-          <Text style={styles.detailReport}>{report?.currency || "N/A"}</Text>
-          <Text style={styles.detailReport}>{report?.year || "N/A"}</Text>
+            <Text style={styles.title}>{report?.reportType?.name || "No Report Found"}</Text>
+                 <Text style={styles.subtitle}>{report.company?.name}</Text>
+          <Text style={styles.subtitle}>{report?.currency || "N/A"}</Text>
+          <Text style={styles.subtitle}>{report?.year || "N/A"}</Text>
 
           {report?.reportType?.name === "Revenue" && report?.monthData && report?.categories && (
             <View>
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginTop: 48,
   },
-  detailReport: {
+  subtitle: {
     fontSize: 12,
     color: "#A9A9A9",
     marginLeft: 16,

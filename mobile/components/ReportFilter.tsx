@@ -47,11 +47,7 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
       });
 
       setCompanyList(response.data);
-      if (response.data.length > 0) {
-        const defaultCompany = response.data[0]._id;
-        setSelectedCompany(defaultCompany);
-        onFilterChange(defaultCompany, []);
-      }
+    
     } catch (error) {
       Alert.alert("Oops", "Something went wrong, try again later.");
     } finally {

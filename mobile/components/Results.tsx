@@ -18,7 +18,8 @@ import { useTranslation } from "react-i18next";
 const { width } = Dimensions.get("window");
 interface ResultsPageProps {
   selectedCompany: string | null;
-  reportType: string | null; // tambahin ini
+  reportType: string | null;
+  onPressResult: () => void;
 }
 
 
@@ -34,8 +35,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
 
 
   const fetchReports = async () => {
-    if (!selectedCompany) return;
-
+    if (!selectedCompany || !reportType) return;
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem("authToken");
@@ -64,6 +64,10 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
   const filteredReports = reportType
     ? reports.filter((r) => reportType.includes(r.reportType?._id))
     : reports;
+
+  if (!selectedCompany) {
+    return null;
+  }
 
   return (
     <View style={styles.container} >
@@ -99,8 +103,17 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
               } else {
                 navigation.navigate("BSPLPage", {
                   reportId: item._id,
-                  selectedCompany,
+                  companyId: selectedCompany ?? undefined,
+                  reportType: item.reportType?._id,
+                  selectedCompany: selectedCompany ?? undefined,
                 });
+
+
+
+
+
+
+
               }
             }}
 

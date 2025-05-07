@@ -65,15 +65,15 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         setSelectedCompany(company);
         setReportType(type ? type.join(", ") : null); 
     };
-
     const handleReportNavigation = () => {
         if (!selectedCompany || !reportType) return;
-        if (reportType === "Revenue") {
-            navigation.navigate("Revenue", { companyId: selectedCompany, reportType });
-        } else {
-            navigation.navigate("BSPL", { companyId: selectedCompany, reportType });
-        }
+
+        navigation.navigate("BSPL", {
+            companyId: selectedCompany,
+            reportType,
+        });
     };
+
 
     return (
         <View style={styles.container}>
@@ -99,7 +99,9 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <ResultsPage
                     selectedCompany={selectedCompany}
                     reportType={reportType}
+                    onPressResult={handleReportNavigation}
                 />
+
             </View>
         </View>
     );

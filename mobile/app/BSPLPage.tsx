@@ -1,103 +1,240 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRoute } from "@react-navigation/native";
-import axios from "axios";
-import NestedDrawer from "../components/NestedDrawer"; 
+import React, { useState, useEffect } from "react"
+import {
+    View,
+    Text,
+    ActivityIndicator,
+    StyleSheet,
+    Alert,
+    ScrollView,
+    TouchableOpacity,
+    Modal,
+    Pressable
+} from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
+import { LinearGradient } from "expo-linear-gradient"
+import { useRoute, RouteProp } from "@react-navigation/native"
+import { RootStackParamList } from "../types"
+import BSPLTable from "../components/BSPLTable"
+import { useTranslation } from "react-i18next"
 
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
+const API_URL = process.env.EXPO_PUBLIC_API_URL
 
 const BSPLPage: React.FC = () => {
-    const route = useRoute();
-    const { reportId } = route.params as { reportId: string };
+    const route = useRoute<RouteProp<RootStackParamList, "BSPL">>()
+    const { reportId } = route.params
 
-    const [report, setReport] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [report, setReport] = useState<any | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [selectedYears, setSelectedYears] = useState<string[]>([])
+    const [yearModalVisible, setYearModalVisible] = useState(false)
+    const [labelColumnCount, setLabelColumnCount] = useState(1)
 
     useEffect(() => {
-        const fetchReport = async () => {
+        const fetchData = async () => {
             try {
-                const token = await AsyncStorage.getItem("authToken");
-                if (!token) return;
+                const token = await AsyncStorage.getItem("authToken")
                 const res = await axios.get(`${API_URL}/reports/${reportId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setReport(res.data);
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+
+                const jsonData = res.data?.reportData?.jsonData || []
+                const jsonHeader: string[] = res.data?.reportData?.jsonHeader || []
+
+ 
+                const labelCount =
+                    jsonHeader.findIndex((h) => /^[0-9]{4}$/.test(h)) || 1
+
+                const years = jsonHeader.slice(labelCount).filter((h) => /^[0-9]{4}$/.test(h))
+
+                res.data.jsonHeaderParsed = years
+                res.data.jsonDataParsed = jsonData
+                setLabelColumnCount(labelCount)
+                setReport(res.data)
+                setSelectedYears([]) // biar kosong defaultnya
             } catch (err) {
-                // Handle error
+                Alert.alert("Oops", "Failed to load BSPL report")
             } finally {
-                setLoading(false);
+                setLoading(false)
             }
-        };
-        fetchReport();
-    }, [reportId]);
+        }
 
-    if (loading) {
-        return (
-            <View style={styles.centered}>
-                <ActivityIndicator size="large" color="#6c918b" />
-            </View>
-        );
+        fetchData()
+    }, [reportId])
+
+    const toggleYear = (year: string) => {
+        if (selectedYears.includes(year)) {
+            setSelectedYears(selectedYears.filter((y) => y !== year))
+        } else {
+            setSelectedYears([...selectedYears, year])
+        }
     }
 
-    if (!report) {
-        return (
-            <View style={styles.centered}>
-                <Text style={styles.errorText}>No report found</Text>
-            </View>
-        );
-    }
+    const filteredHeaders =
+        report?.reportData?.jsonHeader?.slice(0, labelColumnCount).concat(selectedYears) || []
+
+
+    const filteredData =
+        report?.reportData?.jsonData?.map((row: any) => {
+            const base = row.slice(0, labelColumnCount)
+            const values = selectedYears.map((year) => {
+                const index = report?.reportData?.jsonHeader.indexOf(year)
+                return row[index]
+            })
+            return [...base, ...values]
+        }) || []
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 }}>
+        <ScrollView
+            style={{ flex: 1, backgroundColor: "transparent" }}
+            contentContainerStyle={{ flexGrow: 1 }}
+        >
+            <LinearGradient colors={["#071C25", "#253d3d"]} style={StyleSheet.absoluteFill} />
 
-            <Text style={styles.title}>{report.reportName}</Text>
+            <View style={{ flex: 1, paddingBottom: 80 }}>
+                {loading || !report ? (
+                    <ActivityIndicator size="large" color="#6c918b" style={{ marginTop: 48 }} />
+                ) : (
+                    <>
+                        <Text style={styles.title}>{report.reportType?.name}</Text>
+                        <Text style={styles.detail}>{report.company?.name}</Text>
+                        <Text style={styles.detail}>{report.currency}</Text>
 
-            <Text style={styles.subtitle}>{report.reportType?.name}</Text>
-            <Text style={styles.subtitle}>{report.company?.name}</Text>
+                        <View style={styles.filterContainer}>
+                            <TouchableOpacity
+                                onPress={() => setYearModalVisible(true)}
+                                style={styles.modalToggleButton}
+                            >
+                                <Text style={styles.modalToggleText}>
+                                    {selectedYears.length > 0 ? `Selected (${selectedYears.length})` : "Choose Years"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
-            <Text style={styles.subtitle}>{report.currency}</Text>
-            <Text style={styles.subtitle}>{report.year}</Text>
+                        <Modal
+                            visible={yearModalVisible}
+                            transparent={true}
+                            animationType="slide"
+                            onRequestClose={() => setYearModalVisible(false)}
+                        >
+                            <View style={styles.modalBackdrop}>
+                                <View style={styles.modalContent}>
+                                    <Text style={styles.modalTitle}>Choose Years</Text>
+                                    <ScrollView style={{ maxHeight: 200 }}>
+                                        {report.jsonHeaderParsed.map((year: string) => (
+                                            <TouchableOpacity
+                                                key={year}
+                                                onPress={() => toggleYear(year)}
+                                                style={[
+                                                    styles.modalYearItem,
+                                                    selectedYears.includes(year) && styles.modalYearItemActive
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        styles.modalYearText,
+                                                        selectedYears.includes(year) && styles.modalYearTextActive
+                                                    ]}
+                                                >
+                                                    {year}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
 
-            <NestedDrawer reportId={reportId} />
+                                    <Pressable onPress={() => setYearModalVisible(false)} style={styles.modalCloseButton}>
+                                        <Text style={{ color: "#fff" }}>Done</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </Modal>
 
-
+                        {selectedYears.length > 0 && (
+                            <BSPLTable
+                                headers={filteredHeaders}
+                                data={filteredData}
+                                selectedYears={selectedYears}
+                                labelColumnCount={labelColumnCount}
+                            />
+                        )}
+                    </>
+                )}
+            </View>
         </ScrollView>
-    );
-};
+    )
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#0D241F",
-        padding: 16,
-        paddingBottom: 32,
-    },
     title: {
-        fontSize: 20,
-        color: "#fff",
+        fontSize: 18,
         fontWeight: "bold",
-        marginTop: 32,
-
-        marginBottom: 8,
+        color: "#FFF",
+        marginLeft: 16,
+        marginTop: 48
     },
-    subtitle: {
-        fontSize: 14,
-        color: "#ccc",
-        marginBottom: 4,
+    detail: {
+        fontSize: 12,
+        color: "#A9A9A9",
+        marginLeft: 16,
+        marginTop: 4
     },
-    centered: {
+    filterContainer: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginVertical: 32,
+        paddingHorizontal: 16
+    },
+    modalToggleButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 32,
+        backgroundColor: "#0A6067",
+        borderRadius: 20,
+        alignSelf: "flex-start"
+    },
+    modalToggleText: {
+        color: "#fff",
+        fontSize: 13
+    },
+    modalBackdrop: {
         flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
         justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#0D241F",
+        alignItems: "center"
     },
-    errorText: {
-        color: "red",
+    modalContent: {
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 8,
+        width: "80%"
+    },
+    modalTitle: {
         fontSize: 16,
+        fontWeight: "bold",
+        color: "#253d3d",
+        marginBottom: 10
     },
-});
+    modalYearItem: {
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        marginBottom: 6
+    },
+    modalYearItemActive: {
+        backgroundColor: "#8EB8B8"
+    },
+    modalYearText: {
+        color: "#253d3d"
+    },
+    modalYearTextActive: {
+        color: "#000"
+    },
+    modalCloseButton: {
+        backgroundColor: "#0A6067",
+        paddingVertical: 8,
+        borderRadius: 10,
+        alignItems: "center",
+        marginTop: 12
+    }
+})
 
-export default BSPLPage;
+export default BSPLPage

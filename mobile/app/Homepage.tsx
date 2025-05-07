@@ -374,7 +374,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={[styles.modalTitle, { fontSize: 16, paddingTop: 32 }]}>Tag Users</Text>
 
             <TextInput
-              placeholder="Search users..."
+              placeholder="Search..."
               placeholderTextColor="#aaa"
               style={styles.searchInput}
               value={searchUserQuery}
@@ -402,6 +402,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
             </ScrollView>
 
+   
 
 
             <TouchableOpacity
@@ -410,6 +411,29 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             >
               <Text style={styles.modalSaveButtonText}>Save Company</Text>
             </TouchableOpacity>
+            {editingCompanyId && (
+              <TouchableOpacity
+                style={[styles.modalDeleteButton, { backgroundColor: "#7B241C" }]}
+                onPress={async () => {
+                  try {
+                    const token = await AsyncStorage.getItem("authToken");
+                    if (!token) return;
+                    await axios.delete(`${API_URL}/company/${editingCompanyId}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    Alert.alert("Deleted", "Company deleted!");
+                    setCompanyCreateModalVisible(false);
+                    setNewCompanyName("");
+                    setEditingCompanyId(null);
+                    fetchCompanies(token);
+                  } catch (err) {
+                    Alert.alert("Error", "Failed to delete company.");
+                  }
+                }}
+              >
+                <Text style={styles.modalSaveButtonText}>Delete Company</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={styles.modalCloseButton}
@@ -500,11 +524,35 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             >
               <Text style={styles.modalSaveButtonText}>Save User</Text>
             </TouchableOpacity>
+            {editingUserId && (
+              <TouchableOpacity
+                style={[styles.modalDeleteButton, { backgroundColor: "#7B241C" }]}
+                onPress={async () => {
+                  try {
+                    const token = await AsyncStorage.getItem("authToken");
+                    if (!token) return;
+                    await axios.delete(`${API_URL}/users/${editingUserId}`, {
+
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    Alert.alert("Deleted", "User deleted!");
+                    setUserModalVisible(false);
+                    setEditingUserId(null);
+                    fetchUsers(token);
+                  } catch (err) {
+                    console.error("Error deleting user >>>", err);
+                  }
+                }}
+              >
+                <Text style={styles.modalSaveButtonText}>Delete User</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setUserModalVisible(false)}
             >
+              
               <Text style={styles.modalCloseButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -630,7 +678,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 20,
     alignItems: "center",
-    marginTop: 32,
+    marginTop:32,
+    width: "100%"
+  },
+  modalDeleteButton: {
+    backgroundColor: "#112725",
+    padding: 12,
+    borderRadius: 20,
+    alignItems: "center",
+    marginTop: 8,
     width: "100%"
   },
   modalSaveButtonText: {
