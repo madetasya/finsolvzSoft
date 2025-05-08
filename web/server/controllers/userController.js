@@ -357,17 +357,16 @@ const updateUser = async (req, res, next) => {
 };
 
 
-
 const deleteUser = async (req, res, next) => {
   try {
-    const { userId } = req.body;
+    const { id } = req.params; 
     const requester = req.user;
 
     if (requester.role !== "SUPER_ADMIN") {
       throw { name: "Forbidden" };
     }
 
-    const deletedUser = await User.findByIdAndDelete(userId);
+    const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) throw { name: "NotFound" };
 
     await redis.del("users");
@@ -375,9 +374,10 @@ const deleteUser = async (req, res, next) => {
 
     res.json({ message: "Success", user: deletedUser });
   } catch (error) {
-     next({ name: "Error", error });
+    next({ name: "Error", error });
   }
 };
+
 
 export default {
   login,

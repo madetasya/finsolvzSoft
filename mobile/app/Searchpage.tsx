@@ -110,18 +110,25 @@ const SearchPage = ({ navigation }: any) => {
                 navigation.navigate("BSPLPage", { reportId: report._id });
             }
         } else {
-            navigation.navigate("ReportDetail", { reportId: report._id });
+            navigation.navigate("CreateReport", { reportId: report._id });
         }
     };
 
 
     const handlePressUser = (user: any) => {
-        navigation.navigate("UserList", { selectedUser: user });
+        navigation.navigate("HomePage", {
+            openModal: true,
+            selectedUser: user,
+        });
     };
 
     const handlePressCompany = (company: any) => {
-        navigation.navigate("CompanyList", { selectedCompany: company });
+        navigation.navigate("HomePage", {
+            openCompanyModal: true,
+            selectedCompany: company
+        });
     };
+
 
 
 

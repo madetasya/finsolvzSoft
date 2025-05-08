@@ -41,7 +41,7 @@ const createCompany = async (req, res, next) => {
 
 export const getCompanies = async (req, res) => {
   try {
-    const companies = await Company.find().populate("user", "_id name"); // <<< FIX INI
+    const companies = await Company.find().populate("user", "_id name"); 
     res.json(companies);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -51,26 +51,15 @@ export const getCompanies = async (req, res) => {
 
 const getCompanyById = async (req, res, next) => {
   try {
-    const cachedCompany = await redis.get(`company:${req.params.id}`);
-    if (cachedCompany) {
-      return res.json(JSON.parse(cachedCompany));
-    }
-
     const company = await Company.findById(req.params.id).lean();
-    if (!company) {
-      throw { name: "NotFound" };
-    }
+    if (!company) throw { name: "NotFound" };
 
-    if (company.profilePicture) {
-      company.profilePicture = company.profilePicture.startsWith("http") ? company.profilePicture : `http://152.42.172.219:8787${company.profilePicture}`;
-    }
-
-    await redis.set(`company:${req.params.id}`, JSON.stringify(company));
     res.json(company);
   } catch (error) {
     next(error);
   }
 };
+
 
 const getCompanyByName = async (req, res, next) => {
   try {
@@ -111,7 +100,7 @@ const updateCompany = async (req, res, next) => {
       throw { name: "Forbidden" };
     }
 
-    const { id } = req.params; // <-- sudah bener ini
+    const { id } = req.params;
     const { name, user } = req.body;
 
     let users = [];

@@ -15,6 +15,7 @@ interface UserItem {
   _id: string;
   name: string;
   email?: string;
+  role?: string;
 }
 
 interface CompanyItem {
@@ -25,7 +26,7 @@ interface CompanyItem {
 
 
 
-const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
+const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
   const [userName, setUserName] = useState<string | null>(null);
   const [reports, setReports] = useState<any[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -44,9 +45,58 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [isRolePickerVisible, setRolePickerVisible] = useState(false);
   const [selectedUserCompanies, setSelectedUserCompanies] = useState<string[]>([]);
-
-
+  const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
+  const [searchCompanyQuery, setSearchCompanyQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+
+  function formatRoleLabel(role: string) {
+    if (role === "SUPER_ADMIN") return "SUPER ADMIN";
+    if (role === "ADMIN") return "ADMIN";
+    if (role === "CLIENT") return "CLIENT";
+    return role;
+  }
+
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const token = await AsyncStorage.getItem("authToken");
+        if (!token) {
+          Alert.alert("Oops", "Something went wrong, try again later.");
+          return;
+        }
+
+        const response = await axios.get(`${API_URL}/loginUser`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUserName(response.data.name);
+        setUserRole(response.data.role);
+
+        await fetchReports(token, response.data.role, response.data._id);
+        await fetchUsers(token);
+        await fetchCompanies(token);
+      } catch (error) {
+        Alert.alert("Oops", "Something went wrong, try again later.");
+      }
+    };
+
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (route.params?.openModal && route.params?.selectedUser) {
+      navigation.setParams({ openModal: null, selectedUser: null });
+      handleEditUser(route.params.selectedUser);
+    }
+    if (route.params?.openCompanyModal && route.params?.selectedCompany) {
+      navigation.setParams({ openCompanyModal: null, selectedCompany: null });
+      handleEditCompany(route.params.selectedCompany);
+    }
+  }, [route.params]);
+
+
 
   function formatUserName(name: string) {
     if (name.length <= 15) {
@@ -135,12 +185,36 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     });
   };
 
-  const handleEditCompany = (company: CompanyItem) => {
-    setNewCompanyName(company.name);
-    setEditingCompanyId(company._id);
-    setSelectedCompanyUsers(company.user || []);
-    setCompanyCreateModalVisible(true);
+  const handleEditCompany = async (company: CompanyItem) => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) {
+        Alert.alert("Oops", "Auth token missing");
+        return;
+      }
+
+      const realId = typeof company._id === "object" && company._id !== null && "$oid" in (company._id as any)
+        ? (company._id as { $oid: string }).$oid
+        : company._id;
+
+      const res = await axios.get(`${API_URL}/company/${realId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+
+
+      const freshCompany = res.data;
+
+      setNewCompanyName(freshCompany.name);
+      setEditingCompanyId(freshCompany._id);
+      setSelectedCompanyUsers(freshCompany.user || []);
+      setCompanyCreateModalVisible(true);
+    } catch (err) {
+      console.log("GAGAL FETCH COMPANY >>>", err);
+      Alert.alert("Error", "Failed to load company data");
+    }
   };
+
 
 
 
@@ -269,41 +343,17 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     setUserModalVisible(true);
   };
 
+
   const handleEditUser = (user: UserItem) => {
+    setSelectedUser(user);
     setNewUserName(user.name);
     setNewUserEmail(user.email || "");
     setNewUserPassword("");
-    setNewUserRole("CLIENT");
+    setNewUserRole(user.role as "CLIENT" | "ADMIN" | "SUPER_ADMIN");
     setEditingUserId(user._id);
     setUserModalVisible(true);
   };
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const token = await AsyncStorage.getItem("authToken");
-        if (!token) {
-          Alert.alert("Oops", "Something went wrong, try again later.");
-          return;
-        }
-
-        const response = await axios.get(`${API_URL}/loginUser`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUserName(response.data.name);
-        setUserRole(response.data.role);
-
-        await fetchReports(token, response.data.role, response.data._id);
-        await fetchUsers(token);
-        await fetchCompanies(token);
-      } catch (error) {
-        Alert.alert("Oops", "Something went wrong, try again later.");
-      }
-    };
-
-    init();
-  }, []);
 
 
 
@@ -313,7 +363,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         navigation={navigation}
         userName={userName}
         formatUserName={formatUserName}
-        showLanguageToggle={true} 
+        showLanguageToggle={true}
       />
 
       <View style={{ height: 280 }} />
@@ -325,19 +375,20 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         onPressReport={(report) => {
           navigation.navigate('CreateReport', { reportId: report._id });
         }}
-        onDeleteReport={handleDeleteReport} 
+        onDeleteReport={handleDeleteReport}
         // onPressSeeMore={() => console.log('SEE MORE REPORTS >>>')}
         onPressCreateReport={() => navigation.navigate('CreateReport')}
         userRole={userRole}
       />
-
       <UserList
         navigation={navigation}
         users={users}
-        onPressUser={handleEditUser}
+        onPressUser={handleEditUser} // YESS this one!
         onAddUser={handleAddUser}
         userRole={userRole}
       />
+
+
 
 
       <CompanyList
@@ -402,7 +453,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
               </View>
             </ScrollView>
 
-   
+
 
 
             <TouchableOpacity
@@ -446,118 +497,136 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
       </Modal>
 
-      <Modal
-        visible={isUserModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setUserModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{editingUserId ? "Update User" : "Create User"}</Text>
+      {/* MODAL UPDATE USER */}
+      {/* MODAL UPDATE USER */}
+      {/* MODAL UPDATE USER */}
+      {selectedUser && (
+        <Modal
+          visible={isUserModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setUserModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{editingUserId ? "Update User" : "Create User"}</Text>
 
-            <TextInput
-              placeholder="Name"
-              placeholderTextColor="#aaa"
-              style={styles.inputUnderline}
-              value={newUserName}
-              onChangeText={setNewUserName}
-            />
+              <TextInput
+                placeholder="Name"
+                placeholderTextColor="#aaa"
+                style={styles.inputUnderline}
+                value={newUserName}
+                onChangeText={setNewUserName}
+              />
 
-            <TextInput
-              placeholder="Email"
-              placeholderTextColor="#aaa"
-              style={styles.inputUnderline}
-              value={newUserEmail}
-              onChangeText={setNewUserEmail}
-            />
+              <TextInput
+                placeholder="Email"
+                placeholderTextColor="#aaa"
+                style={styles.inputUnderline}
+                value={newUserEmail}
+                onChangeText={setNewUserEmail}
+              />
 
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor="#aaa"
-              style={styles.inputUnderline}
-              value={newUserPassword}
-              onChangeText={setNewUserPassword}
-              secureTextEntry
-            />
+              <TextInput
+                placeholder="Password"
+                placeholderTextColor="#aaa"
+                style={styles.inputUnderline}
+                value={newUserPassword}
+                onChangeText={setNewUserPassword}
+                secureTextEntry
+              />
 
-            <TouchableOpacity
-              style={[styles.inputUnderline, { justifyContent: "center" }]}
-              onPress={() => setRolePickerVisible(true)}
-            >
-              <Text style={{ color: newUserRole ? "#000" : "#aaa" }}>
-                {newUserRole || "Select Role"}
-              </Text>
-            </TouchableOpacity>
-
-
-            <Text style={[styles.modalTitle, { justifyContent: "flex-start", fontSize: 16, paddingTop: 32 }]}>Select Companies</Text>
-
-            <ScrollView style={{ maxHeight: 150, width: "100%" }}>
-              <View style={{ width: "100%" }}>
-                {companies.map((company) => {
-                  const isSelected = selectedUserCompanies.includes(company._id);
-                  return (
-                    <TouchableOpacity
-                      key={company._id}
-                      style={[styles.modalItem, isSelected && { backgroundColor: "#1B3935" }]}
-                      onPress={() => {
-                        if (isSelected) {
-                          setSelectedUserCompanies((prev) => prev.filter((id) => id !== company._id));
-                        } else {
-                          setSelectedUserCompanies((prev) => [...prev, company._id]);
-                        }
-                      }}
-                    >
-                      <Text style={[styles.modalItemText, isSelected && { color: "#E2E4D7" }]}>
-                        {company.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </ScrollView>
-
-            <TouchableOpacity
-              style={styles.modalSaveButton}
-              onPress={handleSaveUser}
-            >
-              <Text style={styles.modalSaveButtonText}>Save User</Text>
-            </TouchableOpacity>
-            {editingUserId && (
               <TouchableOpacity
-                style={[styles.modalDeleteButton, { backgroundColor: "#7B241C" }]}
-                onPress={async () => {
-                  try {
-                    const token = await AsyncStorage.getItem("authToken");
-                    if (!token) return;
-                    await axios.delete(`${API_URL}/users/${editingUserId}`, {
-
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-                    Alert.alert("Deleted", "User deleted!");
-                    setUserModalVisible(false);
-                    setEditingUserId(null);
-                    fetchUsers(token);
-                  } catch (err) {
-                    console.error("Error deleting user >>>", err);
-                  }
-                }}
+                style={[styles.inputUnderline, { justifyContent: "center" }]}
+                onPress={() => setRolePickerVisible(true)}
               >
-                <Text style={styles.modalSaveButtonText}>Delete User</Text>
-              </TouchableOpacity>
-            )}
+                <Text style={{ color: newUserRole ? "#000" : "#aaa" }}>
+                  {formatRoleLabel(newUserRole) || "Select Role"}
+                </Text>
 
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setUserModalVisible(false)}
-            >
-              
-              <Text style={styles.modalCloseButtonText}>Cancel</Text>
-            </TouchableOpacity>
+              </TouchableOpacity>
+
+
+              <Text style={[styles.modalTitle, { justifyContent: "flex-start", fontSize: 16, paddingTop: 32 }]}>Select Companies</Text>
+              <TextInput
+                placeholder="Search Company..."
+                placeholderTextColor="#aaa"
+                style={styles.searchInput}
+                value={searchCompanyQuery}
+                onChangeText={setSearchCompanyQuery}
+              />
+
+              <ScrollView style={{ maxHeight: 150, width: "100%" }}>
+                <View style={{ width: "100%" }}>
+                  {companies
+                    .filter((company) =>
+                      company.name.toLowerCase().includes(searchCompanyQuery.toLowerCase())
+                    )
+                    .map((company) => {
+
+                      const isSelected = selectedUserCompanies.includes(company._id);
+                      return (
+                        <TouchableOpacity
+                          key={company._id}
+                          style={[styles.modalItem, isSelected && { backgroundColor: "#1B3935" }]}
+                          onPress={() => {
+                            if (isSelected) {
+                              setSelectedUserCompanies((prev) => prev.filter((id) => id !== company._id));
+                            } else {
+                              setSelectedUserCompanies((prev) => [...prev, company._id]);
+                            }
+                          }}
+                        >
+                          <Text style={[styles.modalItemText, isSelected && { color: "#E2E4D7" }]}>
+                            {company.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                </View>
+              </ScrollView>
+
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleSaveUser}
+              >
+                <Text style={styles.modalSaveButtonText}>Save User</Text>
+              </TouchableOpacity>
+              {editingUserId && (
+                <TouchableOpacity
+                  style={[styles.modalDeleteButton, { backgroundColor: "#7B241C" }]}
+                  onPress={async () => {
+                    try {
+                      const token = await AsyncStorage.getItem("authToken");
+                      if (!token) return;
+                      await axios.delete(`${API_URL}/users/${editingUserId}`, {
+
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      Alert.alert("Deleted", "User deleted!");
+                      setUserModalVisible(false);
+                      setEditingUserId(null);
+                      fetchUsers(token);
+                    } catch (err) {
+                      console.error("Error deleting user >>>", err);
+                    }
+                  }}
+                >
+                  <Text style={styles.modalSaveButtonText}>Delete User</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setUserModalVisible(false)}
+              >
+
+                <Text style={styles.modalCloseButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
 
       <Modal
         visible={isRolePickerVisible}
@@ -583,7 +652,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
                 setRolePickerVisible(false);
               }}
             >
-              <Text style={styles.roleOptionText}>SUPER_ADMIN</Text>
+              <Text style={styles.roleOptionText}>SUPER ADMIN</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.roleOption}
@@ -598,34 +667,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
               style={[styles.modalCloseButton, { marginTop: 0 }]}
               onPress={() => setRolePickerVisible(false)}
             >
-              <Text style={[styles.modalTitle, { fontSize: 16, paddingTop: 32 }]}>Select Companies</Text>
 
-              <ScrollView style={{ maxHeight: 150, width: "100%" }}>
-                <View style={{ width: "100%" }}>
-                  {companies.map((company) => {
-                    const isSelected = selectedUserCompanies.includes(company._id);
-                    return (
-                      <TouchableOpacity
-                        key={company._id}
-                        style={[styles.modalItem, isSelected && { backgroundColor: "#1B3935" }]}
-                        onPress={() => {
-                          if (isSelected) {
-                            setSelectedUserCompanies((prev) => prev.filter((id) => id !== company._id));
-                          } else {
-                            setSelectedUserCompanies((prev) => [...prev, company._id]);
-                          }
-                        }}
-                      >
-                        <Text style={[styles.modalItemText, isSelected && { color: "#E2E4D7" }]}>
-                          {company.name}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </ScrollView>
-
-              <Text style={styles.modalCloseButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -670,7 +712,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: "#000",
-    paddingLeft: 4, 
+    paddingLeft: 4,
   },
 
   modalSaveButton: {
@@ -678,7 +720,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 20,
     alignItems: "center",
-    marginTop:32,
+    marginTop: 32,
     width: "100%"
   },
   modalDeleteButton: {

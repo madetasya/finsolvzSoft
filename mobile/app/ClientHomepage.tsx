@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import HomeHeader from "../components/HeaderHome";
 import i18n from '../src/i18n'
+import { FlatList } from "react-native-gesture-handler";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -91,17 +92,28 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             />
 
 
+            <FlatList
+                data={[]} // kosong karena kita gak render item biasa
+                ListHeaderComponent={
+                    <>
+                        <View style={{ paddingTop: screenHeight * 0.36, alignItems: 'center' }}>
+                            <ReportFilter key={i18n.language} onFilterChange={handleFilterChange} />
+                        </View>
 
-            <View style={{ marginTop: screenHeight * 0.32 }}>
-                <ReportFilter key={i18n.language} onFilterChange={handleFilterChange} />
+                        {selectedCompany && reportType && (
+                            <ResultsPage
+                                selectedCompany={selectedCompany}
+                                reportType={reportType}
+                                onPressResult={handleReportNavigation}
+                            />
+                        )}
+                    </>
+                }
+                keyExtractor={() => 'static'}
+                renderItem={null}
+                showsVerticalScrollIndicator={false}
+            />
 
-                <ResultsPage
-                    selectedCompany={selectedCompany}
-                    reportType={reportType}
-                    onPressResult={handleReportNavigation}
-                />
-
-            </View>
         </View>
     );
 };

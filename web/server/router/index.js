@@ -22,10 +22,9 @@ router.patch("/change-password", userController.changePassword);
 router.get("/loginUser", userController.getLoginUser);
 router.put("/updateRole", userController.updateRole);
 router.put("/updateUser/:id", userController.updateUser);
-router.get("/users/:name", userController.getUserByName);
+router.get("/users/byName/:name", userController.getUserByName);
 router.get("/users/:id", userController.getUserById);
 router.delete("/users/:id", userController.deleteUser);
-
 
 // REPORT ROUTES
 // router.post("/reports/import", multer.single("file"), reportController.importExcelReport);
@@ -55,8 +54,8 @@ router.delete("/reportTypes/:id", reportTypeController.deleteReportType);
 router.get("/company", companyController.getCompanies);
 router.post("/company", companyController.createCompany);
 router.get("/user/companies", authentication, companyController.getUserCompanies);
-router.get("/company/:name", companyController.getCompanyByName);
 router.get("/company/:id", companyController.getCompanyById);
+router.get("/company/:name", companyController.getCompanyByName);
 router.put("/company/:id", companyController.updateCompany);
 router.delete("/company/:id", companyController.deleteCompany);
 

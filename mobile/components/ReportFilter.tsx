@@ -148,7 +148,15 @@ const fetchReportTypes = async (companyId: string) => {
           </View>
         )}
       </View>
-      <ScrollView style={styles.buttonContainer} horizontal showsHorizontalScrollIndicator={false}>
+      <View style={styles.reportTypeContainer}>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.buttonScrollContent}
+        style={styles.buttonContainer}
+      >
+
         {loading ? (
           <Text style={{ color: '#A0A0A0', fontStyle: 'italic', fontFamily: 'UbuntuLightItalic', paddingLeft: 16, marginBottom: 16 }}>
             Fetching data...
@@ -177,7 +185,7 @@ const fetchReportTypes = async (companyId: string) => {
 
       </ScrollView>
 
-
+</View>
     </View>
   );
 };
@@ -192,7 +200,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#011414",
     paddingVertical: 24,
     marginTop: 16,
-    width: "96%"
+    width: "88%",
+    overflow: 'hidden',
+    minWidth: 308,
   },
   chooseText: {
     fontSize: 16,
@@ -208,7 +218,8 @@ const styles = StyleSheet.create({
   dropdownContainers: {
     marginBottom: 24,
     position: "relative",
-    width: width * 0.9,
+    width: width * 0.72,
+    paddingRight: 8,
   },
   dropdown: {
     marginBottom: 24,
@@ -217,6 +228,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 50,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
+    marginRight: -24,
+    
   },
   dropdownText: {
     fontSize: 16,
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 72,
     position: "absolute",
-    width: width * 0.82,
+    width: width * 0.72,
     zIndex: 2,
     elevation: 5,
     borderRadius: 18,
@@ -248,9 +261,23 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   buttonContainer: {
-  marginTop: -16,
-  marginLeft: 16,
+    marginTop: -20,
+    flexGrow: 0,
   },
+  reportTypeContainer: {
+    width: '100%',
+    overflow: 'hidden',
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#011414',
+ marginTop: -24,
+  },
+
+  buttonScrollContent: {
+    paddingVertical: 4,
+    alignItems: 'center',
+  },
+
   button: {
     backgroundColor: "transparent",
     borderWidth: 1,
@@ -259,8 +286,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 32,
     marginHorizontal: 5,
-    marginBottom: 16,
-    
+    flexShrink: 0, 
   },
   buttonSelected: {
     borderWidth: 0,

@@ -2,7 +2,7 @@ import i18n from '../src/i18n'
 import React from 'react'
 import { useState } from 'react'
 import { BlurView } from 'expo-blur'
-import { View, Image, Text, StyleSheet, Pressable } from 'react-native'
+import { View, Image, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native'
 import { Video, ResizeMode } from 'expo-av'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Button, HelperText, Modal, Portal, TextInput } from 'react-native-paper'
@@ -12,14 +12,16 @@ import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { RootStackParamList } from '../types'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
+import { Keyboard } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
+const screenWidth = Dimensions.get('window').width
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0000',
+    backgroundColor: '#000609',
   },
   video: {
     width: '100%',
@@ -33,9 +35,11 @@ const styles = StyleSheet.create({
     marginTop: -112,
   },
   bottomBackground: {
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
     backgroundColor: '#000609',
+    zIndex: -2,
   },
   logo: {
     position: 'absolute',
@@ -49,14 +53,15 @@ const styles = StyleSheet.create({
   },
   containerForm: {
     position: 'absolute',
-    top: '40%',
+    bottom: 64,
     width: '100%',
-    alignItems: 'flex-start',
-    paddingHorizontal: 50,
+    paddingHorizontal: 24,
+    zIndex: 10,
   },
 
+
   jargonLine1: {
-    fontSize: 32,
+    fontSize: screenWidth * 0.08 ,
     color: '#E2E4D7',
     fontFamily: 'UbuntuMedium',
     letterSpacing: 2,
@@ -66,7 +71,7 @@ const styles = StyleSheet.create({
   },
 
   jargonLine2: {
-    fontSize: 32,
+    fontSize: screenWidth * 0.08 ,
     color: '#E2E4D7',
     fontFamily: 'UbuntuMedium',
     marginTop: 4,
@@ -129,6 +134,7 @@ const LoginPage: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>()
   const { t } = useTranslation()
 
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -139,6 +145,8 @@ const LoginPage: React.FC = () => {
   const [otpMessageType, setOtpMessageType] = useState<'error' | 'info'>('info')
   const [otpLoading, setOtpLoading] = useState(false)
   const [language, setLanguage] = useState(i18n.language || 'en')
+  const [keyboardOpen, setKeyboardOpen] = useState(false)
+
 
   const scale = useSharedValue(1)
   const opacity = useSharedValue(1)
@@ -172,7 +180,7 @@ const LoginPage: React.FC = () => {
         } else {
           navigation.reset({
             index: 0,
-            routes: [{ name: 'Home' }],
+            routes: [{ name: 'HomePage' }],
           })
         }
       } else {
@@ -208,9 +216,31 @@ const LoginPage: React.FC = () => {
       setOtpLoading(false)
     }
   }
+  React.useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardOpen(true)
+    })
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardOpen(false)
+    })
+
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
+  }, [])
+
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: '#000609' }]}
+      edges={['top', 'bottom']}
+    >
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      
       <Video
         source={require('../assets/Video.mp4')}
         rate={1.0}
@@ -227,58 +257,63 @@ const LoginPage: React.FC = () => {
         style={styles.gradient}
       />
       <View style={styles.bottomBackground} />
-      <View style={{ position: 'absolute', top: 48, right: 24, zIndex: 20, flexDirection: 'row' }}>
-        <Text
-          onPress={async () => {
-            i18n.changeLanguage('zh')
-            setLanguage('zh')
-            await AsyncStorage.setItem('selectedLanguage', 'zh')
-          }}
-          style={{
-            color: language === 'zh' ? '#2BA787' : '#E2E4D7',
-            fontFamily: 'UbuntuBold',
-            fontSize: 14,
-            marginRight: 8,
-          }}
-        >
-          {t('login.language.zh')}
-        </Text>
-        <Text style={{ color: '#E2E4D7', fontSize: 14, marginHorizontal: 4 }}>|</Text>
-        <Text
-          onPress={async () => {
-            i18n.changeLanguage('en')
-            setLanguage('en')
-            await AsyncStorage.setItem('selectedLanguage', 'en')
-          }}
-          style={{
-            color: language === 'en' ? '#2BA787' : '#E2E4D7',
-            fontFamily: 'UbuntuBold',
-            fontSize: 14,
-            marginLeft: 8,
-          }}
-        >
-          {t('login.language.en')}
-        </Text>
-      </View>
+        {!keyboardOpen && (
+          <>
+            <View style={{ position: 'absolute', top: 48, right: 24, zIndex: 20, flexDirection: 'row' }}>
+              <Text
+                onPress={async () => {
+                  i18n.changeLanguage('zh')
+                  setLanguage('zh')
+                  await AsyncStorage.setItem('selectedLanguage', 'zh')
+                }}
+                style={{
+                  color: language === 'zh' ? '#2BA787' : '#E2E4D7',
+                  fontFamily: 'UbuntuBold',
+                  fontSize: 14,
+                  marginRight: 8,
+                }}
+              >
+                {t('login.language.zh')}
+              </Text>
+              <Text style={{ color: '#E2E4D7', fontSize: 14, marginHorizontal: 4 }}>|</Text>
+              <Text
+                onPress={async () => {
+                  i18n.changeLanguage('en')
+                  setLanguage('en')
+                  await AsyncStorage.setItem('selectedLanguage', 'en')
+                }}
+                style={{
+                  color: language === 'en' ? '#2BA787' : '#E2E4D7',
+                  fontFamily: 'UbuntuBold',
+                  fontSize: 14,
+                  marginLeft: 8,
+                }}
+              >
+                {t('login.language.en')}
+              </Text>
+            </View>
 
-      <Image
-        source={require('../assets/image/LogoHorizontal.png')}
-        style={styles.logo}
-      />
+            <Image
+              source={require('../assets/image/LogoHorizontal.png')}
+              style={styles.logo}
+            />
+          </>
+        )}
 
       <View style={styles.containerForm}>
-        <Text style={styles.jargonLine1}>
-          {t('login.jargon1.part1')}
-          <Text style={styles.jargonAccent}> {t('login.jargon1.accent')}</Text>
-        </Text>
-        <Text style={styles.jargonLine2}>
-          {t('login.jargon2.part1')}
-          <Text style={styles.jargonAccent}> {t('login.jargon2.accent')}</Text>
-        </Text>
+          {!keyboardOpen && (
+            <>
+              <Text style={styles.jargonLine1}>
+                {t('login.jargon1.part1')}
+                <Text style={styles.jargonAccent}> {t('login.jargon1.accent')}</Text>
+              </Text>
+              <Text style={styles.jargonLine2}>
+                {t('login.jargon2.part1')}
+                <Text style={styles.jargonAccent}> {t('login.jargon2.accent')}</Text>
+              </Text>
+            </>
+          )}
 
-        <Text style={styles.instructionText}>
-          {t('login.loginInstruction')}
-        </Text>
 
         <HelperText
           type="error"
@@ -479,9 +514,10 @@ const LoginPage: React.FC = () => {
           </View>
         </Modal>
       </Portal>
-    </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
 
-    
+
   )
 
   

@@ -6,6 +6,8 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from "react-native"
+import { Dimensions } from "react-native"
+const windowWidth = Dimensions.get("window").width
 
 
 interface BSPLTableProps {
@@ -18,9 +20,20 @@ interface BSPLTableProps {
 const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, labelColumnCount }) => {
     const [openKeys, setOpenKeys] = useState<string[]>([])
 
+
+    const containerWidth = Dimensions.get("window").width * 0.96
+    const labelWidth = Math.max(windowWidth * 0.32, 160)
+
     const valueHeaders = headers.filter(
         (h) => !h.toLowerCase().includes("category") && selectedYears.includes(h)
     )
+
+    const isSingle = valueHeaders.length === 1
+    const valueColWidth = isSingle
+        ? containerWidth - labelWidth - 12
+        : Math.max(windowWidth * 0.24, 100)
+
+    const totalTableWidth = labelWidth + valueColWidth * valueHeaders.length
 
     const toggle = (key: string) => {
         if (openKeys.includes(key)) {
@@ -80,13 +93,15 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                         }}
                         activeOpacity={showArrow ? 0.6 : 1}
                     >
-                        <View >    
+                        <View >
                             <ScrollView
                                 horizontal
                                 showsHorizontalScrollIndicator={true}
                                 scrollEnabled={true}
-                                style={{ maxWidth: 180 }}
+                                style={{ width: '100%' }}
+                                nestedScrollEnabled={true}
                                 
+
                             >
                                 <Text style={styles.labelText}>
                                     {showArrow ? (openKeys.includes(key) ? "▼ " : "▶ ") : ""}
@@ -180,10 +195,10 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
             return null
         })
     }
-
+ 
     return (
-        <View style={[styles.wrapper, { width: 182 + valueHeaders.length * 168 }]}>
-            <View style={[styles.table, { width: 182 + valueHeaders.length * 108 }]}>
+        <View style={styles.wrapper}>
+            <View style={styles.table}>
                 <View style={styles.labelColumn}>
                     <View style={styles.labelCell}>
                         <View style={{ minWidth: 160 }}>
@@ -191,6 +206,9 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                                 horizontal
                                 showsHorizontalScrollIndicator={true}
                                 style={{ maxWidth: 160 }}
+                                contentContainerStyle={{
+                                    paddingRight: 12, 
+                                }}
                             >
                                 <Text style={styles.headerText}></Text>
                             </ScrollView>
@@ -203,9 +221,20 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                     <View>
                         <View style={styles.valueRow}>
                             {valueHeaders.map((h, idx) => (
-                                <View key={idx} style={styles.valueCell}>
-                                    <Text style={styles.headerText}>{h}</Text>
+                                <View
+                                    key={idx}
+                                    style={{
+                                        width: valueColWidth,
+                                        paddingVertical: 12,
+                                    
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <Text style={styles.valueText}>{h}</Text>
+
                                 </View>
+
                             ))}
                         </View>
                         {renderValueRows()}
@@ -232,14 +261,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         alignSelf: "center",
-        paddingHorizontal: 34,
+        marginHorizontal: 32,
+        width: "96%",
+        marginRight: 32,
     },
     table: {
         flexDirection: "row",
         alignItems: "center",
         alignSelf: "center",
         backgroundColor: "#fff",
-    
+        borderRadius: 8,
+        overflow: 'hidden',
+
     },
     labelColumn: {
         flexShrink: 0,
@@ -249,12 +282,15 @@ const styles = StyleSheet.create({
         borderBottomColor: "#eee",
         borderBottomWidth: 1,
         padding: 12,
-        paddingRight: 8,
+        paddingRight: 4,
+        minWidth: Math.max(windowWidth * 0.48, 160),
+        maxWidth: Math.max(windowWidth * 0.45, 160),
     },
+
     labelText: {
         fontWeight: "bold",
         color: "#333",
-        paddingLeft: 36,
+
         paddingRight: 24,
     },
     headerText: {
@@ -272,10 +308,11 @@ const styles = StyleSheet.create({
         minWidth: 50
     },
     valueCell: {
-        minWidth: 50,
+        minWidth: Math.max(windowWidth * 0.24, 100),
         paddingVertical: 12,
-        paddingHorizontal: 36,
-        justifyContent: "center"
+        paddingHorizontal: 16,
+        justifyContent: "center",
+        alignItems: "center",
     },
     valueText: {
         fontSize: 14,

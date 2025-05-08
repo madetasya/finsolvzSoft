@@ -1,6 +1,12 @@
 export type RootStackParamList = {
   Login: undefined;
-  Home: undefined;
+  HomePage: {
+    openModal?: boolean;
+    selectedUser?: any;
+    openCompanyModal?: boolean;
+    selectedCompany?: any;
+  } | undefined;
+
   SearchPage: undefined;
   CreateReport: undefined;
   ClientHomePage: undefined;

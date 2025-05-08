@@ -14,12 +14,21 @@ import ClientHomePage from "./ClientHomepage";
 
 type RootStackParamList = {
   Login: undefined;
-  Home: undefined;
+  HomePage: {
+    openModal?: boolean;
+    selectedUser?: any;
+    openCompanyModal?: boolean;
+    selectedCompany?: any;
+  } | undefined;
+
   SearchPage: undefined;
   CreateReport: undefined;
   ClientHomePage: undefined;
-  Revenue: { reportId: string; selectedCompany?: string | null};
-  BSPLPage: { reportId: string; selectedCompany: string | null };
+  BSPLPage: { reportId: string; companyId: string; reportType: string }
+  Revenue: {
+    reportId: string;
+    selectedCompany: string | null;
+  };
 };
 
 
@@ -56,7 +65,7 @@ const App: React.FC = () => {
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Login" component={LoginPage} />
-          <Stack.Screen name="Home" component={HomePage} />
+          <Stack.Screen name="HomePage" component={HomePage} />
           <Stack.Screen name="SearchPage" component={SearchPage} />
           <Stack.Screen name="CreateReport" component={CreateReportPage} />
           <Stack.Screen name="ClientHomePage" component={ClientHomePage} />
