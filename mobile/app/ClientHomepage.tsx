@@ -22,6 +22,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     const screenHeight = Dimensions.get("window").height;
     const [user, setUser] = useState<any | null>(null);
 
+    const [refreshKey, setRefreshKey] = useState<number>(Date.now());
 
     function formatUserName(name: string) {
         if (name.length <= 15) {
@@ -93,11 +94,29 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 
             <FlatList
-                data={[]} // kosong karena kita gak render item biasa
+                data={[]} 
                 ListHeaderComponent={
                     <>
                         <View style={{ paddingTop: screenHeight * 0.36, alignItems: 'center' }}>
-                            <ReportFilter key={i18n.language} onFilterChange={handleFilterChange} />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setRefreshKey(Date.now());
+                                    setSelectedCompany(null);
+                                    setReportType(null);
+                                }}
+                                style={{
+                                    paddingVertical: 6,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 20,
+                                    marginTop: 16,
+                                    alignSelf: "flex-end",
+                                }}
+                            >
+                                <Text style={{ color: "#FFFF", fontWeight: "bold", textDecorationLine: "underline" }}>Refresh</Text>
+                            </TouchableOpacity>
+
+                            <ReportFilter key={`${i18n.language}-${refreshKey}`} onFilterChange={handleFilterChange} />
+                            
                         </View>
 
                         {selectedCompany && reportType && (

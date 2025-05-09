@@ -85,7 +85,8 @@
   "chooseYears": "Choose Years",
   "selected": "Selected",
   "done": "Done",
-  "REPORTS": "报告列表",
-  "USERS": "用户列表",
-  "COMPANIES": "公司列表"
+  "REPORTS": "REPORTS",
+  "USERS": "USERS",
+  "COMPANIES": "COMPANIES",
+  "refresh": "Refresh"
 }

@@ -73,7 +73,7 @@ const SearchPage = ({ navigation }: any) => {
                     )
 
                     const reportsResponses = await Promise.all(reportsPromises)
-                    console.log("REPORT RESPONSES >>>", reportsResponses.map(r => r.data));
+                    // console.log("REPORT RESPONSES >>>", reportsResponses.map(r => r.data));
 
                     const allReports = reportsResponses.flatMap((res) => res.data)
 
@@ -105,7 +105,7 @@ const SearchPage = ({ navigation }: any) => {
     const handlePressReport = (report: any) => {
         if (userRole === "CLIENT") {
             if (report.reportType?.name === "Revenue") {
-                navigation.navigate("RevenuePage", { reportId: report._id });
+                navigation.navigate("Revenue", { reportId: report._id });
             } else {
                 navigation.navigate("BSPLPage", { reportId: report._id });
             }

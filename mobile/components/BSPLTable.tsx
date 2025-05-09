@@ -19,8 +19,6 @@ interface BSPLTableProps {
 
 const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, labelColumnCount }) => {
     const [openKeys, setOpenKeys] = useState<string[]>([])
-
-
     const containerWidth = Dimensions.get("window").width * 0.96
     const labelWidth = Math.max(windowWidth * 0.32, 160)
 
@@ -54,6 +52,8 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
         const lower = text.toString().toLowerCase()
         return lower.includes("laba") || lower.includes("profit")
     }
+
+    
 
     const renderLabelRows = () => {
         let currentKey = ""
@@ -93,23 +93,26 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                         }}
                         activeOpacity={showArrow ? 0.6 : 1}
                     >
-                        <View >
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={true}
-                                scrollEnabled={true}
-                                style={{ width: '100%' }}
-                                nestedScrollEnabled={true}
-                                
-
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={true}
+                            keyboardShouldPersistTaps="handled"
+                            scrollEnabled={true}
+                            nestedScrollEnabled={true}
+                            contentContainerStyle={{ minWidth: 200 }} 
+                            style={{ maxWidth: Math.max(windowWidth * 0.50, 160) }}
+                            scrollEventThrottle={16}
+                        >
+                            <Text
+                                style={[styles.labelText]}
+                                numberOfLines={1}
                             >
-                                <Text style={styles.labelText}>
-                                    {showArrow ? (openKeys.includes(key) ? "▼ " : "▶ ") : ""}
-                                    {l1}
-                                </Text>
-                            </ScrollView>
-                        </View>
+                                {showArrow ? (openKeys.includes(key) ? "▼ " : "▶ ") : ""}
+                                {l1}
+                            </Text>
+                        </ScrollView>
                     </TouchableOpacity>
+
 
                 )
             }
@@ -126,26 +129,28 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                             isProfitRow(labelText?.toString()) && styles.profitRow,
                         ]}
                     >
-                        <View style={{ minWidth: 160 }}>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={true}
-                                style={{ minWidth: 160 }}
-                                scrollEnabled={true}
-                            >
-                                <Text style={styles.labelText}>
-                                    {labelText}
-                                </Text>
-                            </ScrollView>
-                        </View>
-
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={true}
+                            scrollEnabled={true}
+                            nestedScrollEnabled={true}
+                            contentContainerStyle={{ minWidth: 200 }}
+                            style={{ flexGrow: 1 }}
+                        >
+                            <Text style={styles.labelText} numberOfLines={1}>
+                                {labelText}
+                            </Text>
+                        </ScrollView>
                     </View>
+
                 )
             }
+            
 
             return null
         })
     }
+    
 
     const renderValueRows = () => {
         let currentKey = ""
@@ -217,7 +222,14 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                     {renderLabelRows()}
                 </View>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                <View style={{ flex: 1 }}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={true}
+                        scrollEnabled={true}
+                        nestedScrollEnabled={true}
+                        contentContainerStyle={{ minHeight: 300 }}
+                    >
                     <View>
                         <View style={styles.valueRow}>
                             {valueHeaders.map((h, idx) => (
@@ -241,19 +253,25 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                     </View>
                 </ScrollView>
             </View>
+            </View>
         </View>
     )
 }
 
 function formatValue(val: any) {
     if (val === "" || val === null || val === undefined) return ""
-    const num = Number(val)
+
+    const stringValue = val.toString().replace(",", ".") 
+    const num = Number(stringValue)
+
     if (!isNaN(num)) {
         if (num < 0) return `(${Math.abs(num).toFixed(2)})`
         return num.toFixed(2)
     }
+
     return ""
 }
+
 
 const styles = StyleSheet.create({
     wrapper: {
@@ -280,11 +298,12 @@ const styles = StyleSheet.create({
     },
     labelCell: {
         borderBottomColor: "#eee",
-        borderBottomWidth: 1,
+        borderBottomWidth: 0.5,
         padding: 12,
         paddingRight: 4,
         minWidth: Math.max(windowWidth * 0.48, 160),
-        maxWidth: Math.max(windowWidth * 0.45, 160),
+        maxWidth: Math.max(windowWidth * 0.48, 160),
+        flexGrow: 1 
     },
 
     labelText: {
@@ -300,7 +319,7 @@ const styles = StyleSheet.create({
     valueRow: {
         flexDirection: "row",
         borderBottomColor: "#eee",
-        borderBottomWidth: 1,
+        borderBottomWidth: 0.5,
         paddingRight: 20,
         paddingLeft: 1,
         alignItems: "center",
@@ -322,7 +341,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#8EB8B8"
     },
     profitRow: {
-        backgroundColor: "#A0D6D6"
+        backgroundColor: "#8EB8B8"
+
     }
 })
 

@@ -292,6 +292,14 @@ const CreateReportPage = () => {
                 company: data.company?._id || "",
                 userAccess: data.userAccess?.map((u: any) => u._id) || [],
             });
+            setSelectedUsers(
+                Array.isArray(data.userAccess)
+                    ? typeof data.userAccess[0] === "string"
+                        ? data.userAccess
+                        : data.userAccess.map((u: any) => u._id)
+                    : []
+            )
+
             setJsonHeader(data.reportData?.jsonHeader || defaultHeaders);
             setJsonData(data.reportData?.jsonData || [["", "", "", ""]]);
         } catch (err) {
@@ -327,6 +335,7 @@ const CreateReportPage = () => {
         setUserModalVisible(false);
     }; 
     useEffect(() => {
+        
         const fetchInitialData = async () => {
             await fetchCompanies();
             await fetchUsers();
@@ -340,16 +349,21 @@ const CreateReportPage = () => {
         fetchInitialData();
     }, [reportId]);
 
+    useEffect(() => {
+        if (users.length > 0 && form.userAccess.length > 0) {
+            setForm((prev) => ({ ...prev })) // trigger re-render
+        }
+    }, [users])
+
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 } }>
             <View style={styles.header}>
          
-                <Text style={styles.headerTitle}>Create Report</Text>
+                <Text style={styles.headerTitle}>Report Detail</Text>
             </View>
 
             <View style={styles.formWrap}>
-                <Text style={styles.formTitle}>Insert report details</Text>
                 {Object.keys(form).map((key) => {
                     if (key === "reportType") {
                         return (
@@ -394,11 +408,11 @@ const CreateReportPage = () => {
                                 onPress={() => setUserModalVisible(true)}
                             >
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ color: form.userAccess.length ? '#fff' : '#aaa' }}>
-                                        {form.userAccess.length
-                                            ? users.filter((u) => form.userAccess.includes(u._id)).map((u) => u.name).join(", ")
-                                            : "Select User Access"}
+                                    <Text style={{ color: form.userAccess.length > 0 ? "#fff" : "#aaa" }}>
+                                        {form.userAccess.length > 0 ? `Selected Users (${form.userAccess.length})` : "Select User Access"}
                                     </Text>
+
+
 
                                     <Text style={{ color: '#aaa' }}>▼</Text>
                                 </View>

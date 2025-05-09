@@ -36,9 +36,15 @@ const CompanyList: React.FC<CompanyListProps> = ({ companies, onPressCompany, on
                 <Text style={styles.sectionTitle}>Company List</Text>
                 {userRole === "SUPER_ADMIN" && (
                     <View style={styles.buttonRow}>
-                        <TouchableOpacity style={styles.addButton} onPress={onAddCompany}>
-                            <Text style={styles.addButtonText}>+ Add Company</Text>
-                        </TouchableOpacity>
+                        {userRole === "SUPER_ADMIN" && (
+                            <TouchableOpacity
+                                style={styles.addButton}
+                                onPress={onAddCompany}
+                            >
+                                <Text style={styles.addButtonText}>+ Add Company</Text>
+                            </TouchableOpacity>
+                        )}
+
                     </View>
                 )}
             </View>

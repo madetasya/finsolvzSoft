@@ -38,6 +38,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
   const [searchUserQuery, setSearchUserQuery] = useState("");
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [isUserModalVisible, setUserModalVisible] = useState(false);
+
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -114,6 +115,27 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
     const secondSpaceIndex = spaceIndexes[1];
     return name.substring(0, secondSpaceIndex) + '\n' + name.substring(secondSpaceIndex + 1);
   }
+
+const refreshData = async () => {
+  try {
+    const token = await AsyncStorage.getItem("authToken");
+    if (!token) return Alert.alert("Oops", "Token missing");
+
+    const userRes = await axios.get(`${API_URL}/loginUser`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const userData = userRes.data;
+    setUserName(userData.name);
+    setUserRole(userData.role);
+
+    await fetchReports(token, userData.role, userData._id);
+    await fetchUsers(token);
+    await fetchCompanies(token);
+  } catch (err) {
+    Alert.alert("Failed", "Gagal refresh data");
+  }
+};
 
   const fetchReports = async (token: string, role: string, id: string) => {
     try {
@@ -367,6 +389,20 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
       />
 
       <View style={{ height: 280 }} />
+      <TouchableOpacity
+        style={{
+          paddingVertical: 6,
+          paddingHorizontal: 16,
+          borderRadius: 20,
+          marginTop: -16,
+          marginRight: 16,
+          alignSelf: "flex-end",
+          marginBottom: 16,
+        }}
+        onPress={refreshData}
+      >
+      <Text style={{ color: "#FFFF", fontWeight: "bold", textDecorationLine: "underline" }}>Refresh</Text>
+      </TouchableOpacity>
 
       <ReportList
         reports={reports}
@@ -383,7 +419,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
       <UserList
         navigation={navigation}
         users={users}
-        onPressUser={handleEditUser} // YESS this one!
+        onPressUser={handleEditUser}
         onAddUser={handleAddUser}
         userRole={userRole}
       />
@@ -416,13 +452,16 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
             <TextInput
               placeholder="Company Name"
+              editable={userRole === "SUPER_ADMIN"}
               placeholderTextColor="#aaa"
               style={styles.inputUnderline}
               value={newCompanyName}
               onChangeText={setNewCompanyName}
             />
 
-            <Text style={[styles.modalTitle, { fontSize: 16, paddingTop: 32 }]}>Tag Users</Text>
+            {userRole === "SUPER_ADMIN" ? (
+              <>
+                <Text style={[styles.modalTitle, { alignSelf: "flex-start", fontSize: 16, paddingTop: 32 }]}>Tag Users</Text>
 
             <TextInput
               placeholder="Search..."
@@ -431,6 +470,12 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
               value={searchUserQuery}
               onChangeText={setSearchUserQuery}
             />
+              </>
+            ) : (
+              <Text style={[styles.modalTitle, { alignSelf: "flex-start", fontSize: 16, paddingTop: 32 }]}>
+             User
+              </Text>
+            )}
 
             <ScrollView style={{ maxHeight: 200, width: "100%" }}>
               <View style={{ width: "100%" }}>
@@ -438,6 +483,22 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
                   .filter((user) => user.name.toLowerCase().includes(searchUserQuery.toLowerCase()))
                   .map((user) => {
                     const isSelected = selectedCompanyUsers.includes(user._id);
+
+                    if (userRole !== "SUPER_ADMIN") {
+                      return (
+                        isSelected && (
+                          <View
+                            key={user._id}
+                            style={[styles.modalItem]}
+                          >
+                            <Text style={[styles.modalItemText, { color: "#000" }]}>
+                              {user.name}
+                            </Text>
+                          </View>
+                        )
+                      );
+                    }
+
                     return (
                       <TouchableOpacity
                         key={user._id}
@@ -456,13 +517,17 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
 
 
-            <TouchableOpacity
-              style={styles.modalSaveButton}
-              onPress={handleSaveCompany}
-            >
-              <Text style={styles.modalSaveButtonText}>Save Company</Text>
-            </TouchableOpacity>
-            {editingCompanyId && (
+
+            {userRole === "SUPER_ADMIN" && (
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleSaveCompany}
+              >
+                <Text style={styles.modalSaveButtonText}>Save Company</Text>
+              </TouchableOpacity>
+            )}
+
+            {editingCompanyId && userRole === "SUPER_ADMIN" && (
               <TouchableOpacity
                 style={[styles.modalDeleteButton, { backgroundColor: "#7B241C" }]}
                 onPress={async () => {
@@ -500,7 +565,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
       {/* MODAL UPDATE USER */}
       {/* MODAL UPDATE USER */}
       {/* MODAL UPDATE USER */}
-      {selectedUser && (
+      {(isUserModalVisible && (selectedUser || editingUserId === null)) && (
         <Modal
           visible={isUserModalVisible}
           transparent={true}
@@ -509,10 +574,11 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{editingUserId ? "Update User" : "Create User"}</Text>
+              <Text style={styles.modalTitle}>User Details</Text>
 
               <TextInput
                 placeholder="Name"
+                editable={userRole === "SUPER_ADMIN"}
                 placeholderTextColor="#aaa"
                 style={styles.inputUnderline}
                 value={newUserName}
@@ -529,6 +595,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
               <TextInput
                 placeholder="Password"
+                editable={userRole === "SUPER_ADMIN"}
                 placeholderTextColor="#aaa"
                 style={styles.inputUnderline}
                 value={newUserPassword}
@@ -538,23 +605,33 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
               <TouchableOpacity
                 style={[styles.inputUnderline, { justifyContent: "center" }]}
-                onPress={() => setRolePickerVisible(true)}
+                onPress={userRole === "SUPER_ADMIN" ? () => setRolePickerVisible(true) : undefined}
               >
                 <Text style={{ color: newUserRole ? "#000" : "#aaa" }}>
                   {formatRoleLabel(newUserRole) || "Select Role"}
                 </Text>
-
               </TouchableOpacity>
 
+              {userRole === "SUPER_ADMIN" ? (
+                <>
+                  <Text style={[styles.modalTitle, { alignSelf: "flex-start", fontSize: 16, paddingTop: 32 }]}>
+                    Select Company
+                  </Text>
+                  <TextInput
+                    placeholder="Search Company..."
+                    placeholderTextColor="#aaa"
+                    style={styles.searchInput}
+                    value={searchCompanyQuery}
+                    onChangeText={setSearchCompanyQuery}
+                  />
+                </>
+              ) : (
+                <Text style={[styles.modalTitle, { alignSelf: "flex-start", fontSize: 16, paddingTop: 32 }]}>
+                  Company:
+                </Text>
+              )}
 
-              <Text style={[styles.modalTitle, { justifyContent: "flex-start", fontSize: 16, paddingTop: 32 }]}>Select Companies</Text>
-              <TextInput
-                placeholder="Search Company..."
-                placeholderTextColor="#aaa"
-                style={styles.searchInput}
-                value={searchCompanyQuery}
-                onChangeText={setSearchCompanyQuery}
-              />
+
 
               <ScrollView style={{ maxHeight: 150, width: "100%" }}>
                 <View style={{ width: "100%" }}>
@@ -563,11 +640,11 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
                       company.name.toLowerCase().includes(searchCompanyQuery.toLowerCase())
                     )
                     .map((company) => {
-
                       const isSelected = selectedUserCompanies.includes(company._id);
                       return (
                         <TouchableOpacity
                           key={company._id}
+                          disabled={userRole !== "SUPER_ADMIN"}
                           style={[styles.modalItem, isSelected && { backgroundColor: "#1B3935" }]}
                           onPress={() => {
                             if (isSelected) {
@@ -586,13 +663,17 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
                 </View>
               </ScrollView>
 
-              <TouchableOpacity
-                style={styles.modalSaveButton}
-                onPress={handleSaveUser}
-              >
-                <Text style={styles.modalSaveButtonText}>Save User</Text>
-              </TouchableOpacity>
-              {editingUserId && (
+              {userRole === "SUPER_ADMIN" && (
+                <TouchableOpacity
+                  style={styles.modalSaveButton}
+                  onPress={handleSaveUser}
+                >
+                  <Text style={styles.modalSaveButtonText}>Save User</Text>
+                </TouchableOpacity>
+              )}
+
+
+              {editingUserId && userRole === "SUPER_ADMIN" && (
                 <TouchableOpacity
                   style={[styles.modalDeleteButton, { backgroundColor: "#7B241C" }]}
                   onPress={async () => {

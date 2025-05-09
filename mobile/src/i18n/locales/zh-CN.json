@@ -81,5 +81,9 @@
   },
   "chooseYears": "选择年份",
   "selected": "已选择",
-  "done":"完成"
+  "done": "完成",
+  "REPORTS": "报告列表",
+  "USERS": "用户列表",
+  "COMPANIES": "公司列表",
+  "refresh": "刷新"
 }

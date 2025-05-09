@@ -8,7 +8,8 @@ import {
     ScrollView,
     TouchableOpacity,
     Modal,
-    Pressable
+    Pressable,
+    Platform
 } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
@@ -18,6 +19,7 @@ import { RootStackParamList } from "../types"
 import BSPLTable from "../components/BSPLTable"
 import { useTranslation } from "react-i18next"
 import i18n from '../src/i18n'
+import { KeyboardAvoidingView } from "react-native"
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
@@ -54,9 +56,10 @@ const BSPLPage: React.FC = () => {
                 res.data.jsonDataParsed = jsonData
                 setLabelColumnCount(labelCount)
                 setReport(res.data)
-                setSelectedYears([]) // biar kosong defaultnya
+                setSelectedYears(years)
+
             } catch (err) {
-                Alert.alert("Oops", "Failed to load BSPL report")
+                Alert.alert("Error", "Failed to load BSPL report")
             } finally {
                 setLoading(false)
             }
@@ -88,9 +91,17 @@ const BSPLPage: React.FC = () => {
         }) || []
 
     return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={{ flex: 1 }}
+        >
         <ScrollView
             style={{ flex: 1, backgroundColor: "transparent" }}
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{
+                flexGrow: 1,
+                paddingBottom: 100, 
+            }}
+            keyboardShouldPersistTaps="handled"
         >
             <LinearGradient colors={["#071C25", "#253d3d"]} style={StyleSheet.absoluteFill} />
 
@@ -161,12 +172,14 @@ const BSPLPage: React.FC = () => {
                                 data={filteredData}
                                 selectedYears={selectedYears}
                                 labelColumnCount={labelColumnCount}
+                                
                             />
                         )}
                     </>
                 )}
             </View>
         </ScrollView>
+        </KeyboardAvoidingView>
     )
 }
 
