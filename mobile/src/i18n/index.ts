@@ -13,7 +13,8 @@ i18n.use(initReactI18next).init({
     resources: {
         en: { translation: en },
         zh: { translation: zh }
-    }
+      }
+      
 })
 
 export default i18n

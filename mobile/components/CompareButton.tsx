@@ -7,6 +7,7 @@ import {
     FlatList,
     StyleSheet,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 
 interface CompareButtonProps {
     availableReports: { id: string; title: string; date: string }[];
@@ -15,15 +16,14 @@ interface CompareButtonProps {
 
 const CompareButton: React.FC<CompareButtonProps> = ({ availableReports, onCompareSelect }) => {
     const [modalVisible, setModalVisible] = useState(false);
-
+    const { t } = useTranslation();
     return (
         <View>
             {/* +Compare Button */}
             <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-                <Text style={styles.buttonText}>+ Compare</Text>
+                <Text style={styles.buttonText}>{t('compare')}</Text>
             </TouchableOpacity>
 
-            {/* Modal for Selecting Comparison Data */}
             <Modal
                 visible={modalVisible}
                 animationType="slide"
@@ -32,7 +32,7 @@ const CompareButton: React.FC<CompareButtonProps> = ({ availableReports, onCompa
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Select Report to Compare</Text>
+                        <Text style={styles.modalTitle}>{t('selectReportToCompare')}</Text>
 
                         <FlatList
                             data={availableReports}
@@ -52,7 +52,7 @@ const CompareButton: React.FC<CompareButtonProps> = ({ availableReports, onCompa
                         />
 
                         <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                            <Text style={styles.closeButtonText}>Close</Text>
+                            <Text style={styles.closeButtonText}>{t('close')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: "white",
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
     },
     modalContainer: {
         flex: 1,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontFamily: "UbuntuMedium",
         marginBottom: 10,
     },
     reportItem: {
@@ -101,11 +101,12 @@ const styles = StyleSheet.create({
     },
     reportTitle: {
         fontSize: 16,
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
     },
     reportDate: {
         fontSize: 14,
         color: "gray",
+        fontFamily: "UbuntuLight",
     },
     closeButton: {
         marginTop: 10,
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     },
     closeButtonText: {
         color: "white",
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
     },
 });
 

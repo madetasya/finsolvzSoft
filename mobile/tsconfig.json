@@ -3,6 +3,9 @@
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": true,
-     "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "jsx": "react",
+    "lib": ["ES2020", "DOM"], 
+    "types": ["react", "react-native"]
   }
 }

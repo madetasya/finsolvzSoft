@@ -67,7 +67,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({ data, months, categories, 
              
              
               {/* MonthS */}
-              <SvgText x={(filteredChartData.length * (barWidth + barSpacing)) / 2} y={275} fontSize={12} textAnchor="middle" fill="#FFFFFF">
+              <SvgText x={(filteredChartData.length * (barWidth + barSpacing)) / 2} y={275} fontSize={12} textAnchor="middle" fill="#FFFFFF" fontFamily="UbuntuBold">
                 {month}
               </SvgText>
 
@@ -90,6 +90,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({ data, months, categories, 
                       fontSize={8}
                       textAnchor="middle"
                       fill="#FFFFFF"
+                      fontFamily= "UbuntuRegular"
                     >
                       {value}
                     </SvgText>
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontFamily: "UbuntuBold",
     color: "#333",
   },
 });

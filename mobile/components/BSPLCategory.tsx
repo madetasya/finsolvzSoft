@@ -63,7 +63,7 @@ export default function BSPLCategoryColumn({
 const styles = StyleSheet.create({
     col: { width: 200, backgroundColor: "#fff" },
     header: {
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         color: "#0A6067",
         textAlign: "center",
         paddingVertical: 12,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
     },
     labelText: {
-        fontWeight: "bold",
+        fontFamily: "UbuntuRegular",
         color: "#333",
     },
 })

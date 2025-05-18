@@ -11,6 +11,9 @@ import { PaperProvider } from "react-native-paper";
 import SearchPage from "./Searchpage";
 import CreateReportPage from "./CreateReport";
 import ClientHomePage from "./ClientHomepage";
+import { I18nextProvider } from "react-i18next"
+import i18n from "../src/i18n/index"
+
 
 type RootStackParamList = {
   Login: undefined;
@@ -58,6 +61,7 @@ const App: React.FC = () => {
   }
 
   return (
+    <I18nextProvider i18n={i18n}>
     <PaperProvider>
       <NavigationContainer>
         <Stack.Navigator
@@ -71,11 +75,10 @@ const App: React.FC = () => {
           <Stack.Screen name="ClientHomePage" component={ClientHomePage} />
           <Stack.Screen name="Revenue" component={RevenuePage} />
           <Stack.Screen name="BSPLPage" component={BSPLPage} />
-
-
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
+    </I18nextProvider>
   );
 
 };

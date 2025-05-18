@@ -85,5 +85,10 @@
   "REPORTS": "报告列表",
   "USERS": "用户列表",
   "COMPANIES": "公司列表",
-  "refresh": "刷新"
+  "refresh": "刷新",
+  "selectReportToCompare": "选择要比较的报告",
+  "compare": "比较",
+  "update_title": "有可用的更新",
+  "update_desc": "有新版本的应用可用。请更新以继续使用应用程序。",
+  "update_now": "立即更新"
 }

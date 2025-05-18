@@ -1,8 +1,8 @@
 import i18n from '../src/i18n'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react'
 import { BlurView } from 'expo-blur'
-import { View, Image, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native'
+import { View, Image, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Dimensions, TouchableOpacity, Alert } from 'react-native'
 import { Video, ResizeMode } from 'expo-av'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Button, HelperText, Modal, Portal, TextInput } from 'react-native-paper'
@@ -14,6 +14,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
 import { Keyboard } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Constants from 'expo-constants'
+import * as FileSystem from 'expo-file-system'
+import * as IntentLauncher from 'expo-intent-launcher'
+
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const screenWidth = Dimensions.get('window').width
@@ -146,7 +150,55 @@ const LoginPage: React.FC = () => {
   const [otpLoading, setOtpLoading] = useState(false)
   const [language, setLanguage] = useState(i18n.language || 'en')
   const [keyboardOpen, setKeyboardOpen] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [apkUrl, setApkUrl] = useState('')
 
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/latest-version`)
+        const serverVersion = (res.data.version || "").trim()
+
+        const currentVersion = (
+          Constants.expoConfig?.version ||
+          Constants.manifest?.version ||
+          "0.0.0"
+        ).trim()
+
+        console.log("VERSI APP >>>", JSON.stringify(currentVersion))
+        console.log("VERSI SERVER >>>", JSON.stringify(serverVersion))
+        console.log("IS VERSI SAMA?", currentVersion === serverVersion)
+
+        if (serverVersion !== currentVersion && !showUpdateModal) {
+          setApkUrl(res.data.apkUrl)
+          setShowUpdateModal(true)
+        }
+      } catch (err) {
+        console.log("CHECK UPDATE FAILED >>>", err)
+      }
+    }
+
+    checkUpdate()
+  }, [])
+  
+  const handleUpdate = async () => {
+    try {
+      const localPath = FileSystem.documentDirectory + 'update.apk'
+      const { uri } = await FileSystem.downloadAsync(apkUrl, localPath)
+      console.log('APK TERDOWNLOAD >>>>', uri)
+
+      IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: uri,
+        flags: 1,
+        type: 'application/vnd.android.package-archive'
+      })
+    } catch (err) {
+      console.log('INSTALL GAGAL >>>', err)
+      Alert.alert("ERROR", "Failed to install the update. Please try again later.")
+    }
+  }
+  
+  
 
   const scale = useSharedValue(1)
   const opacity = useSharedValue(1)
@@ -240,7 +292,57 @@ const LoginPage: React.FC = () => {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      
+        {showUpdateModal && (
+          <View style={{
+            position: "absolute",
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 99
+          }}>
+            <View style={{
+              backgroundColor: "#fff",
+              padding: 24,
+              borderRadius: 12,
+              width: "80%",
+              alignItems: "center"
+            }}>
+              <Text style={{
+                fontSize: 18,
+                fontFamily: "UbuntuBold",
+                marginBottom: 8,
+                color: "#000"
+              }}>
+                {t("update_title")}
+              </Text>
+              <Text style={{
+                fontSize: 14,
+                fontFamily: "UbuntuRegular",
+                textAlign: "center",
+                marginBottom: 20,
+                color: "#000"
+              }}>
+                {t("update_desc")}
+              </Text>
+              <TouchableOpacity
+                onPress={handleUpdate}
+                style={{
+                  backgroundColor: "#15616D",
+                  paddingVertical: 10,
+                  paddingHorizontal: 24,
+                  borderRadius: 8
+                }}
+              >
+                <Text style={{
+                  color: "#fff",
+                  fontFamily: "UbuntuBold"
+                }}>{t("update_now")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
       <Video
         source={require('../assets/Video.mp4')}
         rate={1.0}
@@ -401,10 +503,11 @@ const LoginPage: React.FC = () => {
 
       {modalVisible && (
         <>
+        {/* @ts-ignore */}
           <BlurView
             intensity={30}
+              experimentalBlurMethod= "dimezisBlurView"
             tint="dark"
-            experimentalBlurMethod="dimezisBlurView"
             style={{
               ...StyleSheet.absoluteFillObject,
               zIndex: 10,

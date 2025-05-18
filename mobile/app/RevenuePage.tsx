@@ -179,10 +179,12 @@ const RevenuePage: React.FC = () => {
 
   return (
     <ScrollView style={styles.fullScreen} contentContainerStyle={styles.contentContainer}>
-      <LinearGradient colors={["#071C25", "#253d3d"]} style={styles.background} />
-
+      
       {loading ? (
-        <ActivityIndicator size="large" color="#6c918b" style={styles.loading} />
+    
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#6c918b" />
+        </View>
       ) : (
         <View>
             <Text style={styles.title}>{report?.reportType?.name || "No Report Found"}</Text>
@@ -203,7 +205,7 @@ const RevenuePage: React.FC = () => {
 
           {selectedComparisonReport?.reportType?.name === "Revenue" && selectedComparisonReport?.monthData && selectedComparisonReport?.categories && (
             <View>
-                <Text style={styles.sectionTitle}>{selectedComparisonReport.reportName} {t("report.comparison")}</Text>
+                <Text style={styles.sectionTitle}>{selectedComparisonReport.reportName}</Text>
               <RevenueTable
                 monthData={selectedComparisonReport.monthData}
                 categories={selectedComparisonReport.categories}
@@ -220,6 +222,7 @@ const RevenuePage: React.FC = () => {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
+    backgroundColor: "#071C25",
   },
   contentContainer: {
     paddingBottom: 80,
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "UbuntuBold",
     color: "#FFFFFF",
     marginLeft: 16,
     marginTop: 48,
@@ -243,6 +246,7 @@ const styles = StyleSheet.create({
     color: "#A9A9A9",
     marginLeft: 16,
     marginTop: 4,
+    fontFamily: "UbuntuRegular",
   },
   loading: {
     marginLeft: 16,
@@ -250,11 +254,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "UbuntuBold",
     color: "#FFFFFF",
     marginLeft: 16,
     marginTop: 24,
   },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 400,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
 });
 
 export default RevenuePage;

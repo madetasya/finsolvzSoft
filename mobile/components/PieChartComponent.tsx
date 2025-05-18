@@ -18,8 +18,8 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data }) => {
   const screenWidth = Dimensions.get("window").width;
   const centerX = screenWidth / 2;
   const centerY = 140;
-  const radius = 100;
-  const textRadius = radius + 20; 
+  const radius = 116;
+  const textRadius = radius + 24; 
 
   const total = data.reduce((sum, category) => sum + category.value, 0);
   let startAngle = 0;
@@ -57,16 +57,18 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data }) => {
           return (
             <G key={index}>
               <Path d={pathData} fill={generateColor(index)} />
-              <SvgText
+              {/* <SvgText
                 x={textX}
                 y={textY}
+                 dx={textX > centerX ? 10 : -10}
                 fill="#FFFFFF"
-                fontSize="14"
+                fontSize="12"
+                fontFamily="UbuntuRegular"
                 textAnchor={textX > centerX ? "start" : "end"}
                 alignmentBaseline="middle"
               >
                 {((value / total) * 100).toFixed(1)}%
-              </SvgText>
+              </SvgText> */}
             </G>
           );
         })}
@@ -77,7 +79,10 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data }) => {
         {data.map((category, index) => (
           <View key={index} style={styles.legendItem}>
             <View style={[styles.colorBox, { backgroundColor: generateColor(index) }]} />
-            <Text style={styles.legendText}>{category.name}</Text>
+            <Text style={styles.legendText}>
+              {category.name} ({((category.value / total) * 100).toFixed(1)}%)
+            </Text>
+
           </View>
         ))}
       </View>
@@ -88,14 +93,16 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data }) => {
 const styles = StyleSheet.create({
   legendContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     flexWrap: "wrap",
-    marginTop: 16,
+    marginTop: 8,
+    marginBottom: 16,
+   
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 8,
+    marginHorizontal: 4,
     marginBottom: 4,
   },
   colorBox: {
@@ -103,10 +110,12 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 4,
     marginRight: 8,
+    marginBottom: 8
   },
   legendText: {
     fontSize: 14,
     color: "#FFFFFF",
+    fontFamily: "UbuntuRegular",
   },
 });
 

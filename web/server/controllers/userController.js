@@ -378,6 +378,12 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+const getLatestVersion = (req, res) => {
+  res.json({
+    version: "1.0.0",
+    apkUrl: "http://159.89.194.251/finsolvz.apk",
+  });
+};
 
 export default {
   login,
@@ -393,4 +399,5 @@ export default {
   updateRole,
   updateUser,
   deleteUser,
+  getLatestVersion,
 };

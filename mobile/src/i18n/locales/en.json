@@ -81,12 +81,16 @@
     "pie": "Pie Chart",
     "bar": "Bar Chart"
   },
-
+  "selectReportToCompare": "Select Report",
   "chooseYears": "Choose Years",
   "selected": "Selected",
   "done": "Done",
   "REPORTS": "REPORTS",
   "USERS": "USERS",
   "COMPANIES": "COMPANIES",
-  "refresh": "Refresh"
+  "refresh": "Refresh",
+  "update_title": "Update Available",
+  "update_desc": "New version of the app is available. Please update to continue using the app.",
+  "update_now": "Update",
+  "compare": "Compare"
 }

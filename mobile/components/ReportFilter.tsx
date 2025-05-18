@@ -205,12 +205,11 @@ const styles = StyleSheet.create({
     minWidth: 308,
   },
   chooseText: {
+    fontFamily: "UbuntuBold",
     fontSize: 16,
     paddingLeft: 24,
-    fontWeight: "bold",
     color: "#F4F4F4",
     marginBottom: 8,
-    fontFamily: "UbuntuRegular",
   },
   filterContainerOpen: {
     flex: -1,
@@ -233,7 +232,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "UbuntuRegular",
     color: "#253d3d",
   },
   dropdownContainer: {
@@ -254,6 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#253d3d",
   },
   dropdownItemText: {
+    fontFamily: "UbuntuRegular",
     fontSize: 16,
     color: "#253d3d",
   },
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 14,
-    fontWeight: "bold",
+    fontFamily: "UbuntuRegular",
   },
   buttonTextSelected: {
     color: "#fff",

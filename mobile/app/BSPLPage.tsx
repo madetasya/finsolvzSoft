@@ -17,8 +17,8 @@ import { LinearGradient } from "expo-linear-gradient"
 import { useRoute, RouteProp } from "@react-navigation/native"
 import { RootStackParamList } from "../types"
 import BSPLTable from "../components/BSPLTable"
+import i18n from '../src/i18n/index'
 import { useTranslation } from "react-i18next"
-import i18n from '../src/i18n'
 import { KeyboardAvoidingView } from "react-native"
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
@@ -26,14 +26,13 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL
 const BSPLPage: React.FC = () => {
     const route = useRoute<RouteProp<RootStackParamList, "BSPLPage">>()
     const { reportId } = route.params
-
     const [report, setReport] = useState<any | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedYears, setSelectedYears] = useState<string[]>([])
     const [yearModalVisible, setYearModalVisible] = useState(false)
     const [labelColumnCount, setLabelColumnCount] = useState(1)
-      const { t } = useTranslation();
-    
+    const { t } = useTranslation();
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -46,7 +45,7 @@ const BSPLPage: React.FC = () => {
                 const jsonData = res.data?.reportData?.jsonData || []
                 const jsonHeader: string[] = res.data?.reportData?.jsonHeader || []
 
- 
+
                 const labelCount =
                     jsonHeader.findIndex((h) => /^[0-9]{4}$/.test(h)) || 1
 
@@ -56,7 +55,7 @@ const BSPLPage: React.FC = () => {
                 res.data.jsonDataParsed = jsonData
                 setLabelColumnCount(labelCount)
                 setReport(res.data)
-                setSelectedYears(years)
+                setSelectedYears([])
 
             } catch (err) {
                 Alert.alert("Error", "Failed to load BSPL report")
@@ -95,90 +94,90 @@ const BSPLPage: React.FC = () => {
             behavior={Platform.OS === "ios" ? "padding" : undefined}
             style={{ flex: 1 }}
         >
-        <ScrollView
-            style={{ flex: 1, backgroundColor: "transparent" }}
-            contentContainerStyle={{
-                flexGrow: 1,
-                paddingBottom: 100, 
-            }}
-            keyboardShouldPersistTaps="handled"
-        >
-            <LinearGradient colors={["#071C25", "#253d3d"]} style={StyleSheet.absoluteFill} />
+            <ScrollView
+                style={{ flex: 1, backgroundColor: "transparent" }}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingBottom: 100,
+                }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <LinearGradient colors={["#071C25", "#253d3d"]} style={StyleSheet.absoluteFill} />
 
-            <View style={{ flex: 1, paddingBottom: 80 }}>
-                {loading || !report ? (
-                    <ActivityIndicator size="large" color="#6c918b" style={{ marginTop: 48 }} />
-                ) : (
-                    <>
-                        <Text style={styles.title}>{report.reportType?.name}</Text>
-                        <Text style={styles.detail}>{report.company?.name}</Text>
-                        <Text style={styles.detail}>{report.currency}</Text>
+                <View style={{ flex: 1, paddingBottom: 80 }}>
+                    {loading || !report ? (
+                        <ActivityIndicator size="large" color="#6c918b" style={{ marginTop: 48 }} />
+                    ) : (
+                        <>
+                            <Text style={styles.title}>{report.reportType?.name}</Text>
+                            <Text style={styles.detail}>{report.company?.name}</Text>
+                            <Text style={styles.detail}>{report.currency}</Text>
 
-                        <View style={styles.filterContainer}>
-                            <TouchableOpacity
-                                onPress={() => setYearModalVisible(true)}
-                                style={styles.modalToggleButton}
-                            >
+                            <View style={styles.filterContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setYearModalVisible(true)}
+                                    style={styles.modalToggleButton}
+                                >
                                     <Text style={styles.modalToggleText}>
                                         {selectedYears.length > 0
                                             ? `${t("selected")} (${selectedYears.length})`
                                             : t("chooseYears")}
                                     </Text>
 
-                            </TouchableOpacity>
-                        </View>
+                                </TouchableOpacity>
+                            </View>
 
-                        <Modal
-                            visible={yearModalVisible}
-                            transparent={true}
-                            animationType="slide"
-                            onRequestClose={() => setYearModalVisible(false)}
-                        >
-                            <View style={styles.modalBackdrop}>
-                                <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>{t("chooseYears")}</Text>
-                                    <ScrollView style={{ maxHeight: 200 }}>
-                                        {report.jsonHeaderParsed.map((year: string) => (
-                                            <TouchableOpacity
-                                                key={year}
-                                                onPress={() => toggleYear(year)}
-                                                style={[
-                                                    styles.modalYearItem,
-                                                    selectedYears.includes(year) && styles.modalYearItemActive
-                                                ]}
-                                            >
-                                                <Text
+                            <Modal
+                                visible={yearModalVisible}
+                                transparent={true}
+                                animationType="slide"
+                                onRequestClose={() => setYearModalVisible(false)}
+                            >
+                                <View style={styles.modalBackdrop}>
+                                    <View style={styles.modalContent}>
+                                        <Text style={styles.modalTitle}>{t("chooseYears")}</Text>
+                                        <ScrollView style={{ maxHeight: 200 }}>
+                                            {report.jsonHeaderParsed.map((year: string) => (
+                                                <TouchableOpacity
+                                                    key={year}
+                                                    onPress={() => toggleYear(year)}
                                                     style={[
-                                                        styles.modalYearText,
-                                                        selectedYears.includes(year) && styles.modalYearTextActive
+                                                        styles.modalYearItem,
+                                                        selectedYears.includes(year) && styles.modalYearItemActive
                                                     ]}
                                                 >
-                                                    {year}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
+                                                    <Text
+                                                        style={[
+                                                            styles.modalYearText,
+                                                            selectedYears.includes(year) && styles.modalYearTextActive
+                                                        ]}
+                                                    >
+                                                        {year}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
 
-                                    <Pressable onPress={() => setYearModalVisible(false)} style={styles.modalCloseButton}>
-                                            <Text style={{ color: "#fff" }}>{t("done")}</Text>
-                                    </Pressable>
+                                        <Pressable onPress={() => setYearModalVisible(false)} style={styles.modalCloseButton}>
+                                            <Text style={{ color: "#fff", fontFamily: "UbuntuBold"}}>{t("done")}</Text>
+                                        </Pressable>
+                                    </View>
                                 </View>
-                            </View>
-                        </Modal>
+                            </Modal>
 
-                        {selectedYears.length > 0 && (
-                            <BSPLTable
-                                headers={filteredHeaders}
-                                data={filteredData}
-                                selectedYears={selectedYears}
-                                labelColumnCount={labelColumnCount}
-                                
-                            />
-                        )}
-                    </>
-                )}
-            </View>
-        </ScrollView>
+                            {selectedYears.length > 0 && (
+                                <BSPLTable
+                                    headers={filteredHeaders}
+                                    data={filteredData}
+                                    selectedYears={selectedYears}
+                                    labelColumnCount={labelColumnCount}
+
+                                />
+                            )}
+                        </>
+                    )}
+                </View>
+            </ScrollView>
         </KeyboardAvoidingView>
     )
 }
@@ -186,7 +185,7 @@ const BSPLPage: React.FC = () => {
 const styles = StyleSheet.create({
     title: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         color: "#FFF",
         marginLeft: 16,
         marginTop: 48
@@ -195,24 +194,29 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: "#A9A9A9",
         marginLeft: 16,
-        marginTop: 4
+        marginTop: 4,
+        fontFamily: "UbuntuRegular",
+        
     },
     filterContainer: {
         flexDirection: "row",
         flexWrap: "wrap",
         marginVertical: 32,
-        paddingHorizontal: 16
+        paddingHorizontal: 16,
+        fontFamily: "UbuntuRegular",
     },
     modalToggleButton: {
         paddingVertical: 8,
         paddingHorizontal: 32,
         backgroundColor: "#0A6067",
         borderRadius: 20,
-        alignSelf: "flex-start"
+        alignSelf: "flex-start",
+        
     },
     modalToggleText: {
         color: "#fff",
-        fontSize: 13
+        fontSize: 13,
+        fontFamily: "UbuntuBold",
     },
     modalBackdrop: {
         flex: 1,
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 16,
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         color: "#253d3d",
         marginBottom: 10
     },
@@ -236,13 +240,16 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 10,
         borderRadius: 10,
-        marginBottom: 6
+        marginBottom: 6,
+        fontFamily: "UbuntuRegular", 
+
     },
     modalYearItemActive: {
         backgroundColor: "#8EB8B8"
     },
     modalYearText: {
-        color: "#253d3d"
+        color: "#253d3d",
+        fontFamily: "UbuntuRegular",
     },
     modalYearTextActive: {
         color: "#000"

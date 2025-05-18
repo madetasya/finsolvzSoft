@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#333",
         textAlign: "left",
+        fontFamily: "UbuntuRegular",
     },
     overlay: {
         flex: 3,
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
     optionText: {
         fontSize: 14,
         color: "#333",
+        fontFamily: "UbuntuRegular",
     },
 });
 

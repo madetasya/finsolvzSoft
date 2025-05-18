@@ -106,14 +106,6 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
                   companyId: selectedCompany ?? undefined,
                   reportType: item.reportType?._id,
                 });
-
-
-
-
-
-
-
-
               }
             }}
 
@@ -149,7 +141,7 @@ const styles = StyleSheet.create({
   resultsText: {
     color: "#FFFFFF",
     fontSize: 22,
-    fontWeight: "bold",
+    fontFamily: "UbuntuBold",
     marginTop: -8,
   },
   resultList: {
@@ -168,12 +160,13 @@ const styles = StyleSheet.create({
   resultTitle: {
     color: "#253d3d",
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "UbuntuBold",
   },
   resultSubtitle: {
     color: "#6c918b",
     fontSize: 14,
     marginTop: 4,
+    fontFamily: "UbuntuRegular",
   },
   resultDate: {
     color: "#6c918b",

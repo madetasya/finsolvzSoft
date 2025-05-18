@@ -1,27 +1,26 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Dimensions, Alert } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, FlatList } from "react-native";
 import ReportFilter from "../components/ReportFilter";
-import Grid from "../assets/image/Grid.svg";
 import ResultsPage from "../components/Results";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import HomeHeader from "../components/HeaderHome";
 import i18n from '../src/i18n'
-import { FlatList } from "react-native-gesture-handler";
+import { useTranslation } from "react-i18next";
+
+
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
     const [reportType, setReportType] = useState<string | null>(null);
-
+    const { t } = useTranslation()
     const [userName, setUserName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const screenHeight = Dimensions.get("window").height;
     const [user, setUser] = useState<any | null>(null);
-
     const [refreshKey, setRefreshKey] = useState<number>(Date.now());
 
     function formatUserName(name: string) {
@@ -45,7 +44,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
             try {
                 const token = await AsyncStorage.getItem("authToken");
                 const lang = await AsyncStorage.getItem("selectedLanguage");
-                if (lang) i18n.changeLanguage(lang); 
+                if (lang) i18n.changeLanguage(lang);
                 if (!token) return;
 
                 const response = await axios.get(`${API_URL}/loginUser`, {
@@ -64,7 +63,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     const handleFilterChange = (company: string | null, type: string[] | null) => {
         setSelectedCompany(company);
-        setReportType(type ? type.join(", ") : null); 
+        setReportType(type ? type.join(", ") : null);
     };
     const handleReportNavigation = () => {
         if (!selectedCompany || !reportType) return;
@@ -94,7 +93,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 
             <FlatList
-                data={[]} 
+                data={[]}
                 ListHeaderComponent={
                     <>
                         <View style={{ paddingTop: screenHeight * 0.36, alignItems: 'center' }}>
@@ -112,11 +111,11 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     alignSelf: "flex-end",
                                 }}
                             >
-                                <Text style={{ color: "#FFFF", fontWeight: "bold", textDecorationLine: "underline" }}>Refresh</Text>
+                                <Text style={{ color: "#FFFF", fontFamily: "UbuntuMedium", textDecorationLine: "underline" }}>{t('refresh')} </Text>
                             </TouchableOpacity>
 
                             <ReportFilter key={`${i18n.language}-${refreshKey}`} onFilterChange={handleFilterChange} />
-                            
+
                         </View>
 
                         {selectedCompany && reportType && (

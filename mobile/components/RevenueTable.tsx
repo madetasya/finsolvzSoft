@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     categorySticky: {
         position: "relative",
         left: 0,
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         textAlign: "left",
         minWidth: 100,
         paddingVertical: 20,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     },
     headerCell: {
         color: "#F6F4F0",
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         textAlign: "center",
         paddingVertical: 12,
         minWidth: 85,
@@ -353,35 +353,35 @@ const styles = StyleSheet.create({
     },
     monthCell: {
         color: "#008D92",
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         textAlign: "center",
         paddingVertical: 10,
-        minWidth: 85, // Default width
+        minWidth: 85, 
     },
     totalCategory: {
         color: "#008D92",
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
     },
     totalColumn: {
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         color: "#008D92",
         textAlign: "center",
         paddingVertical: 10,
-        minWidth: 85, // Default width
+        minWidth: 85, 
     },
     totalRow: {
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         color: "#008D92",
         textAlign: "center",
         paddingVertical: 10,
-        minWidth: 85, // Default width
+        minWidth: 85, 
     },
     grandTotalColumn: {
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
         color: "#0A6067",
         textAlign: "center",
         paddingVertical: 10,
-        minWidth: 85, // Default width
+        minWidth: 85, 
     },
     row: {
         flexDirection: "row",
@@ -435,10 +435,11 @@ const styles = StyleSheet.create({
     },
     chartToggleText: {
         color: "#008D92",
-        fontWeight: "bold",
+        fontFamily: "UbuntuBold",
     },
     activeText: {
         color: "#FFF",
+        fontFamily: "UbuntuRegular",
     },
 });
 

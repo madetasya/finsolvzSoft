@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
     View,
     Text,
@@ -31,7 +31,6 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
         ? containerWidth - labelWidth - 12
         : Math.max(windowWidth * 0.24, 100)
 
-    const totalTableWidth = labelWidth + valueColWidth * valueHeaders.length
 
     const toggle = (key: string) => {
         if (openKeys.includes(key)) {
@@ -52,8 +51,14 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
         const lower = text.toString().toLowerCase()
         return lower.includes("laba") || lower.includes("profit")
     }
-
-    
+    useEffect(() => {
+        if (labelColumnCount === 1 && data.length) {
+            const keys = data.map((row) => row[0])
+                .filter((val): val is string => typeof val === "string")
+            setOpenKeys(keys)
+        }
+    }, [labelColumnCount, data])
+      
 
     const renderLabelRows = () => {
         let currentKey = ""
@@ -85,34 +90,38 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
 
             if (isParent) {
                 return (
-                    <TouchableOpacity
-                        key={`label-${i}`}
-                        style={labelStyle}
-                        onPress={() => {
-                            if (showArrow) toggle(key)
-                        }}
-                        activeOpacity={showArrow ? 0.6 : 1}
-                    >
+                    <View key={`label-${i}`} style={labelStyle}>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={true}
-                            keyboardShouldPersistTaps="handled"
-                            scrollEnabled={true}
-                            nestedScrollEnabled={true}
-                            contentContainerStyle={{ minWidth: 200 }} 
-                            style={{ maxWidth: Math.max(windowWidth * 0.50, 160) }}
+                            contentContainerStyle={{ paddingHorizontal: 8, alignItems: "center" }}
+                            style={{ width: '100%' }}
                             scrollEventThrottle={16}
+                            nestedScrollEnabled
+                            keyboardShouldPersistTaps="handled"
                         >
-                            <Text
-                                style={[styles.labelText]}
-                                numberOfLines={1}
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (showArrow) toggle(key)
+                                }}
+                                activeOpacity={showArrow ? 0.6 : 1}
                             >
-                                {showArrow ? (openKeys.includes(key) ? "▼ " : "▶ ") : ""}
-                                {l1}
-                            </Text>
+                                <Text
+                                    numberOfLines={1}
+                                    style={{
+                                        fontWeight: "bold",
+                                        color: "#333",
+                                  
+                                        minWidth: 200, 
+                                    }}
+                                >
+                                    {showArrow ? (openKeys.includes(key) ? "▼ " : "▶ ") : ""}
+                                    {l1}
+                                </Text>
+                            </TouchableOpacity>
                         </ScrollView>
-                    </TouchableOpacity>
-
+                    </View>
+                  
 
                 )
             }
@@ -149,6 +158,7 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
 
             return null
         })
+        
     }
     
 
@@ -186,7 +196,7 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
                                         flex: 1,
                                         padding: 12,
                                         alignItems: "center",
-                                        justifyContent: "center"
+                                        justifyContent: "center",
                                     }}
                                 >
                                     <Text style={styles.valueText}>{formatValue(value)}</Text>

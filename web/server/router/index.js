@@ -1,19 +1,19 @@
 import express from "express";
 const router = express.Router();
-// import categoryController from "../controllers/categoryController.js";
 import reportController from "../controllers/reportController.js";
 import userController from "../controllers/userController.js";
 import companyController from "../controllers/companyController.js";
 import reportTypeController from "../controllers/reportTypeController.js";
 import { authorization, registerUser } from "../middleware/authorization.js";
 import authentication from "../middleware/authentication.js";
-import multer from "../middleware/multer.js";
 
 // USER ROUTES
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
+// UPDATE APP
 router.post("/login", userController.login);
 router.get("/users", userController.getUsers);
+router.get("/latest-version", userController.getLatestVersion);
 
 router.use(authentication);
 router.post("/register", userController.register);

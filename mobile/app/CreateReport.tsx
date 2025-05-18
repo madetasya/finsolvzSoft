@@ -3,11 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert,
 import * as DocumentPicker from "expo-document-picker";
 import * as XLSX from "xlsx";
 import axios from "axios";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
 import { Asset } from "expo-asset";
-import { FlatList } from "react-native-gesture-handler";
+import { FlatList } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RouteProp, useRoute } from "@react-navigation/native";
 
@@ -101,28 +99,7 @@ const CreateReportPage = () => {
     const updateForm = (field: keyof typeof form, value: string): void => {
         setForm({ ...form, [field]: value });
     };
-    const handleDownloadTemplate = async (templateName: "templateFullYear" | "templateYearOnly") => {
-        try {
-            const templateAsset = templateName === "templateFullYear"
-                ? require("../assets/templateFullYear.xlsx")
-                : require("../assets/templateYearOnly.xlsx");
 
-            const templateUri = FileSystem.cacheDirectory + `${templateName}.xlsx`;
-
-            await FileSystem.downloadAsync(
-                Asset.fromModule(templateAsset).uri,
-                templateUri
-            );
-
-            if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(templateUri);
-            } else {
-                Alert.alert("Error", "This feature not available for your device");
-            }
-        } catch (error) {
-            Alert.alert("Error", "Failed to download the template.");
-        }
-    };
 
     const addRow = (pos: "above" | "below"): void => {
         const { row } = selectedCell ?? fallbackSelected;
@@ -179,13 +156,19 @@ const CreateReportPage = () => {
 
 
     const deleteRow = () => {
-        if (!selectedCell) return;
-        if (jsonData.length <= 1) return Alert.alert("You can't delete all rows!");
+        const rowIndex = selectedCell?.row ?? jsonData.length - 1;
+
+        if (jsonData.length <= 1) {
+            Alert.alert("You can't delete all rows!");
+            return;
+        }
+
         const updated = [...jsonData];
-        updated.splice((selectedCell as { row: number }).row, 1);
+        updated.splice(rowIndex, 1);
         setJsonData(updated);
         setSelectedCell(null);
     };
+      
 
     const deleteColumn = () => {
         if (!selectedCell) return;
