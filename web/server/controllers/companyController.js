@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import Company from "../models/CompanyModel.js";
 import UserModel from "../models/UserModel.js";
 import { v2 as cloudinary } from "cloudinary";
-import redis from "../config/redis.js";
 
 dotenv.config();
 
@@ -35,19 +34,18 @@ const createCompany = async (req, res, next) => {
     await newCompany.save();
     res.status(201).json({ message: "Company created successfully", company: newCompany });
   } catch (error) {
-    next({ name: "Error", message: "Internal Server Error" });
+    next(error);
   }
 };
 
 export const getCompanies = async (req, res) => {
   try {
-    const companies = await Company.find().populate("user", "_id name"); 
+    const companies = await Company.find().populate("user", "_id name");
     res.json(companies);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
-
 
 const getCompanyById = async (req, res, next) => {
   try {
@@ -60,14 +58,8 @@ const getCompanyById = async (req, res, next) => {
   }
 };
 
-
 const getCompanyByName = async (req, res, next) => {
   try {
-    const cachedCompany = await redis.get(`company:name:${req.params.name}`);
-    if (cachedCompany) {
-      return res.json(JSON.parse(cachedCompany));
-    }
-
     const company = await Company.findOne({ name: req.params.name }).lean();
     if (!company) {
       throw { name: "NotFound" };
@@ -77,7 +69,6 @@ const getCompanyByName = async (req, res, next) => {
       company.profilePicture = company.profilePicture.startsWith("http") ? company.profilePicture : `http://152.42.172.219:8787${company.profilePicture}`;
     }
 
-    await redis.set(`company:name:${req.params.name}`, JSON.stringify(company));
     res.json(company);
   } catch (error) {
     next(error);
@@ -94,6 +85,7 @@ const getUserCompanies = async (req, res, next) => {
     next(error);
   }
 };
+
 const updateCompany = async (req, res, next) => {
   try {
     if (req.user.role !== "SUPER_ADMIN") {
@@ -126,7 +118,6 @@ const updateCompany = async (req, res, next) => {
         });
         profilePicture = uploaded.secure_url;
       } catch (uploadError) {
-        // console.log("UPLOAD GAGAL >>>>", uploadError);
         return res.status(500).json({
           message: "Cloudinary upload failed",
           error: uploadError,
@@ -140,9 +131,6 @@ const updateCompany = async (req, res, next) => {
     if (users.length > 0) company.user = users;
 
     await company.save();
-
-    await redis.del(`company:${id}`);
-    await redis.del(`company:name:${company.name}`);
 
     res.status(200).json({
       message: "Success",
@@ -159,21 +147,17 @@ const deleteCompany = async (req, res, next) => {
       throw { name: "Forbidden" };
     }
 
-    const { id } = req.params; // <-- ganti ke id
+    const { id } = req.params;
 
     const deletedCompany = await Company.findByIdAndDelete(id);
     if (!deletedCompany) {
       throw { name: "NotFound" };
     }
 
-    await redis.del(`company:${id}`);
-    await redis.del(`company:name:${deletedCompany.name}`);
-
     res.json({ message: "Company deleted successfully", company: deletedCompany });
   } catch (error) {
     next(error);
   }
 };
-
 
 export default { createCompany, getCompanies, getCompanyById, getCompanyByName, getUserCompanies, updateCompany, deleteCompany };

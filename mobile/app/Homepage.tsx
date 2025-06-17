@@ -37,7 +37,6 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
   const [searchUserQuery, setSearchUserQuery] = useState("");
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [isUserModalVisible, setUserModalVisible] = useState(false);
-
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -50,14 +49,31 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
   const [loading, setLoading] = useState(true);
 
 
-  function formatRoleLabel(role: string) {
+  function roleLogin(role: string) {
     if (role === "SUPER_ADMIN") return "SUPER ADMIN";
     if (role === "ADMIN") return "ADMIN";
     if (role === "CLIENT") return "CLIENT";
     return role;
   }
 
+  function formatUserName(name: string) {
+    if (name.length <= 15) {
+      return name;
+    }
+    let spaceIndexes = [];
+    for (let i = 0; i < name.length; i++) {
+      if (name[i] === ' ') {
+        spaceIndexes.push(i);
+      }
+    }
+    if (spaceIndexes.length < 2) {
+      return name;
+    }
+    const secondSpaceIndex = spaceIndexes[1];
+    return name.substring(0, secondSpaceIndex) + '\n' + name.substring(secondSpaceIndex + 1);
+  }
 
+  //USE EFFECTS
   useEffect(() => {
     const init = async () => {
       try {
@@ -75,7 +91,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
         setUserRole(response.data.role);
 
         await fetchReports(token, response.data.role, response.data._id);
-        await fetchUsers(token);
+        await getUsers(token);
         await fetchCompanies(token);
       } catch (error) {
         Alert.alert("Oops", "Something went wrong, try again later.");
@@ -97,73 +113,46 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
   }, [route.params]);
 
 
-
-  function formatUserName(name: string) {
-    if (name.length <= 15) {
-      return name;
-    }
-    let spaceIndexes = [];
-    for (let i = 0; i < name.length; i++) {
-      if (name[i] === ' ') {
-        spaceIndexes.push(i);
-      }
-    }
-    if (spaceIndexes.length < 2) {
-      return name;
-    }
-    const secondSpaceIndex = spaceIndexes[1];
-    return name.substring(0, secondSpaceIndex) + '\n' + name.substring(secondSpaceIndex + 1);
-  }
-
-const refreshData = async () => {
-  try {
-    const token = await AsyncStorage.getItem("authToken");
-    if (!token) return Alert.alert("Oops", "Token missing");
-
-    const userRes = await axios.get(`${API_URL}/loginUser`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const userData = userRes.data;
-    setUserName(userData.name);
-    setUserRole(userData.role);
-
-    await fetchReports(token, userData.role, userData._id);
-    await fetchUsers(token);
-    await fetchCompanies(token);
-  } catch (err) {
-    Alert.alert("Failed", "Gagal refresh data");
-  }
-};
-
-  const fetchReports = async (token: string, role: string, id: string) => {
+//REFRESH DATA FUNCTION
+ 
+  const refreshData = async () => {
     try {
-      if (role === "SUPER_ADMIN") {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) return Alert.alert("Oops", "Token missing");
+
+      const userRes = await axios.get(`${API_URL}/loginUser`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const userData = userRes.data;
+      setUserName(userData.name);
+      setUserRole(userData.role);
+
+      await fetchReports(token, userData.role, userData._id);
+      await getUsers(token);
+      await fetchCompanies(token);
+    } catch (err) {
+      Alert.alert("Failed", "Gagal refresh data");
+    }
+  };
+
+
+  //========================================REPORTS======================================//
+  //========================================REPORTS======================================//
+  //========================================REPORTS======================================//
+
+  const fetchReports = async (token: string, role: string, userId: string) => {
+    try {
+      if (role === "SUPER_ADMIN" || role === "ADMIN") {
         const response = await axios.get(`${API_URL}/reports`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReports(response.data);
       } else {
-        const getAccessData = await axios.get(`${API_URL}/reports/userAccess/${id}`, {
+        const response = await axios.get(`${API_URL}/reports/userAccess/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const getCreatedByData = await axios.get(`${API_URL}/reports/createdby/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const bothData = [...getAccessData.data, ...getCreatedByData.data];
-
-        const mergedReports: any[] = [];
-        const antiDoubleReport = new Set();
-
-        for (let i = 0; i < bothData.length; i++) {
-          const report = bothData[i];
-          if (!antiDoubleReport.has(report._id)) {
-            antiDoubleReport.add(report._id);
-            mergedReports.push(report);
-          }
-        }
-
-        setReports(mergedReports);
+        setReports(response.data);
       }
     } catch (error) {
       Alert.alert("Error", "Failed to fetch reports. Please try again later.");
@@ -172,17 +161,152 @@ const refreshData = async () => {
     }
   };
 
-  const fetchUsers = async (token: string) => {
+  const handleDeleteReport = async (reportId: string) => {
+    const token = await AsyncStorage.getItem("authToken");
+
+    if (!token) {
+      Alert.alert("Oops", "Something went wrong, try to login again.");
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/reports/${reportId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete report.");
+      return;
+    }
+
+    const updatedReports = reports.filter((report) => report._id !== reportId);
+    setReports(updatedReports);
+    Alert.alert("Success", "Report deleted successfully!");
+  };
+
+
+
+  //====================================USERS=======================================//
+  //====================================USERS=======================================//
+  //====================================USERS=======================================//
+
+  const handleAddUser = () => {
+    setNewUserName("");
+    setNewUserEmail("");
+    setNewUserPassword("");
+    setNewUserRole("CLIENT");
+    setEditingUserId(null);
+    setUserModalVisible(true);
+  };
+
+
+  const handleEditUser = (user: UserItem) => {
+    setSelectedUser(user);
+    setNewUserName(user.name);
+    setNewUserEmail(user.email || "");
+    setNewUserPassword("");
+    setNewUserRole(user.role as "CLIENT" | "ADMIN" | "SUPER_ADMIN");
+    setEditingUserId(user._id);
+    setUserModalVisible(true);
+  };
+
+  const getUsers = async (token: string) => {
     try {
       const response = await axios.get(`${API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // console.log(response.data);
       setUsers(response.data);
-    } catch (error) {
-      // console.error("Error fetching users >>>", error);
+    } catch (error: any) {
+      // console.error("ERROR FETCH USERS >>>", error?.response?.status, error?.response?.data);
       Alert.alert("Error", "Failed to fetch users. Please try again later.");
     }
   };
+
+  //UPDATE OR CREATE USER
+  const handleSaveUser = async () => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) {
+        Alert.alert("Oops", "Something went wrong, try login again.");
+        return;
+      }
+
+      const payload: { name: string; email: string; password?: string; role: string; company?: string[] } = {
+        name: newUserName.trim(),
+        email: newUserEmail.trim(),
+        ...(editingUserId ? {} : { password: newUserPassword.trim() }),
+        role: newUserRole,
+        ...(selectedUserCompanies.length > 0 ? { company: selectedUserCompanies } : {}),
+      };
+
+      // console.log("PAYLOAD YANG DIKIRIM >>>>", payload);
+
+      if (!payload.name || !payload.email || (!editingUserId && !payload.password)) {
+        Alert.alert("Error", "Please fill in all required fields.");
+        return;
+      }
+
+      if (editingUserId) {
+        await axios.put(`${API_URL}/updateUser/${editingUserId}`, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      
+        setTimeout(() => {
+          Alert.alert("Success", "User updated successfully!");
+        }, 300);
+      } else {
+        await axios.post(`${API_URL}/register`, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      
+        setTimeout(() => {
+          Alert.alert("Success", "User created successfully!");
+        }, 300);
+      }
+      
+      setNewUserName("");
+      setNewUserEmail("");
+      setNewUserPassword("");
+      setNewUserRole("CLIENT");
+      setEditingUserId(null);
+      setSelectedUserCompanies([]);
+
+      getUsers(token);
+    } catch (error: any) {
+      // console.error("Error during user registration:", error?.response?.data || error);
+      Alert.alert("Error", error?.response?.data?.message || "Failed to save user");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) {
+        Alert.alert("Oops", "Something went wrong, try to login again.");
+        return;
+      }
+
+      await axios.delete(`${API_URL}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      Alert.alert("Success", "User deleted successfully!");
+      setUsers(users.filter((user) => user._id !== userId));
+    } catch (err) {
+      Alert.alert("Error", "Failed to delete user.");
+    }
+  };
+
+  //====================================COMPANY=======================================//
+  //====================================COMPANY=======================================//
+  //====================================COMPANY=======================================//
 
   const fetchCompanies = async (token: string) => {
     try {
@@ -196,7 +320,8 @@ const refreshData = async () => {
     }
   };
 
-  const handleToggleCompanyUser = (userId: string) => {
+  // handle setiap user ada di company apa.
+  const handleUsersCompany = (userId: string) => {
     setSelectedCompanyUsers((prev) => {
       if (prev.includes(userId)) {
         return prev.filter((id) => id !== userId);
@@ -231,13 +356,10 @@ const refreshData = async () => {
       setSelectedCompanyUsers(freshCompany.user || []);
       setCompanyCreateModalVisible(true);
     } catch (err) {
-      console.log("GAGAL FETCH COMPANY >>>", err);
+      // console.log("GAGAL FETCH COMPANY >>>", err);
       Alert.alert("Error", "Failed to load company data");
     }
   };
-
-
-
 
   const handleSaveCompany = async () => {
     try {
@@ -278,104 +400,6 @@ const refreshData = async () => {
     }
   };
 
-  const handleSaveUser = async () => {
-    try {
-      const token = await AsyncStorage.getItem("authToken");
-      if (!token) {
-        Alert.alert("Oops", "Something went wrong, try login again.");
-        return;
-      }
-
-      const payload: { name: string; email: string; password?: string; role: string; company?: string[] } = {
-        name: newUserName.trim(),
-        email: newUserEmail.trim(),
-        ...(editingUserId ? {} : { password: newUserPassword.trim() }),
-        role: newUserRole,
-        ...(selectedUserCompanies.length > 0 ? { company: selectedUserCompanies } : {}),
-      };
-
-      // console.log("PAYLOAD YANG DIKIRIM >>>>", payload);
-
-      if (!payload.name || !payload.email || (!editingUserId && !payload.password)) {
-        Alert.alert("Error", "Please fill in all required fields.");
-        return;
-      }
-
-      if (editingUserId) {
-        await axios.put(`${API_URL}/updateUser/${editingUserId}`, payload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        Alert.alert("Success", "User updated successfully");
-      } else {
-        await axios.post(`${API_URL}/register`, payload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        Alert.alert("Success", "User created successfully");
-      }
-
-      setUserModalVisible(false);
-      setNewUserName("");
-      setNewUserEmail("");
-      setNewUserPassword("");
-      setNewUserRole("CLIENT");
-      setEditingUserId(null);
-      setSelectedUserCompanies([]);
-
-      fetchUsers(token);
-    } catch (error: any) {
-      // console.error("Error during user registration:", error?.response?.data || error);
-      Alert.alert("Error", error?.response?.data?.message || "Failed to save user");
-    }
-  };
-  const handleDeleteReport = async (reportId: string) => {
-    try {
-      const token = await AsyncStorage.getItem("authToken");
-      if (!token) {
-        Alert.alert("Oops", "Something went wrong, try to login again.");
-        return;
-      }
-
-      await axios.delete(`${API_URL}/reports/${reportId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      Alert.alert("Success", "Report deleted successfully!");
-
-      const updatedReports = reports.filter((report) => report._id !== reportId);
-      setReports(updatedReports);
-    } catch (err) {
-      // console.error("Error deleting report >>>", err);
-      Alert.alert("Error", "Failed to delete report.");
-    }
-  };
-
-  const handleAddUser = () => {
-    setNewUserName("");
-    setNewUserEmail("");
-    setNewUserPassword("");
-    setNewUserRole("CLIENT");
-    setEditingUserId(null);
-    setUserModalVisible(true);
-  };
-
-
-  const handleEditUser = (user: UserItem) => {
-    setSelectedUser(user);
-    setNewUserName(user.name);
-    setNewUserEmail(user.email || "");
-    setNewUserPassword("");
-    setNewUserRole(user.role as "CLIENT" | "ADMIN" | "SUPER_ADMIN");
-    setEditingUserId(user._id);
-    setUserModalVisible(true);
-  };
-
-
 
 
   return (
@@ -400,7 +424,7 @@ const refreshData = async () => {
         }}
         onPress={refreshData}
       >
-      <Text style={{ color: "#FFFF", fontWeight: "bold", textDecorationLine: "underline" }}>Refresh</Text>
+        <Text style={{ color: "#FFFF", fontWeight: "bold", textDecorationLine: "underline" }}>Refresh</Text>
       </TouchableOpacity>
 
       <ReportList
@@ -420,6 +444,7 @@ const refreshData = async () => {
         users={users}
         onPressUser={handleEditUser}
         onAddUser={handleAddUser}
+        onDeleteUser={handleDeleteUser}
         userRole={userRole}
       />
 
@@ -462,17 +487,17 @@ const refreshData = async () => {
               <>
                 <Text style={[styles.modalTitle, { alignSelf: "flex-start", fontSize: 16, paddingTop: 32 }]}>Tag Users</Text>
 
-            <TextInput
-              placeholder="Search..."
-              placeholderTextColor="#aaa"
-              style={styles.searchInput}
-              value={searchUserQuery}
-              onChangeText={setSearchUserQuery}
-            />
+                <TextInput
+                  placeholder="Search..."
+                  placeholderTextColor="#aaa"
+                  style={styles.searchInput}
+                  value={searchUserQuery}
+                  onChangeText={setSearchUserQuery}
+                />
               </>
             ) : (
               <Text style={[styles.modalTitle, { alignSelf: "flex-start", fontSize: 16, paddingTop: 32 }]}>
-             User
+                User
               </Text>
             )}
 
@@ -502,7 +527,7 @@ const refreshData = async () => {
                       <TouchableOpacity
                         key={user._id}
                         style={[styles.modalItem, isSelected && { backgroundColor: "#1B3935" }]}
-                        onPress={() => handleToggleCompanyUser(user._id)}
+                        onPress={() => handleUsersCompany(user._id)}
                       >
                         <Text style={[styles.modalItemText, isSelected && { color: "#E2E4D7" }]}>
                           {user.name}
@@ -607,7 +632,7 @@ const refreshData = async () => {
                 onPress={userRole === "SUPER_ADMIN" ? () => setRolePickerVisible(true) : undefined}
               >
                 <Text style={{ color: newUserRole ? "#000" : "#aaa" }}>
-                  {formatRoleLabel(newUserRole) || "Select Role"}
+                  {roleLogin(newUserRole) || "Select Role"}
                 </Text>
               </TouchableOpacity>
 
@@ -686,7 +711,7 @@ const refreshData = async () => {
                       Alert.alert("Deleted", "User deleted!");
                       setUserModalVisible(false);
                       setEditingUserId(null);
-                      fetchUsers(token);
+                      getUsers(token);
                     } catch (err) {
                       console.error("Error deleting user >>>", err);
                     }

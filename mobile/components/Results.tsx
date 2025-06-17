@@ -14,6 +14,7 @@ import { RootStackParamList } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
+import i18n from "../src/i18n";
 
 const { width } = Dimensions.get("window");
 interface ResultsPageProps {
@@ -56,14 +57,37 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
     }
   };
 
-  
+
   useEffect(() => {
     fetchReports();
   }, [selectedCompany, reportType]);
 
-  const filteredReports = reportType
-    ? reports.filter((r) => reportType.includes(r.reportType?._id))
-    : reports;
+  // const filteredReports = reportType
+  //   ? reports.filter((r) => reportType.includes(r.reportType?._id))
+  //   : reports;
+  const isMandarin = i18n.language === 'zh' || i18n.language === 'cn';
+  const mandarinRegex = /资产负债表|利润表|收入/;
+
+  const filteredReports = reports.filter((r) => {
+    const typeMatch = reportType ? reportType.includes(r.reportType?._id) : true;
+    const reportName = r.reportName || "";
+
+    let titleMatch = true;
+
+    if (isMandarin) {
+      if (!mandarinRegex.test(reportName)) {
+        titleMatch = false;
+      }
+    } else {
+      if (mandarinRegex.test(reportName)) {
+        titleMatch = false;
+      }
+    }
+
+    return typeMatch && titleMatch;
+  });
+
+
 
   if (!selectedCompany) {
     return null;
@@ -89,7 +113,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
       {/* Result List */}
       <FlatList
         data={filteredReports}
-        style={{paddingTop: -8}}
+        style={{ paddingTop: -8 }}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -109,7 +133,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
               }
             }}
 
->
+          >
             <View style={styles.resultContent}>
               <Text style={styles.resultTitle}>{item.reportName}</Text>
               {/* <Text style={styles.resultSubtitle}>{item.reportType?.name || "Unknown Type"}</Text>
@@ -130,7 +154,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     marginTop: 20,
-    paddingBottom: 26, 
+    paddingBottom: 26,
   },
   header: {
     flexDirection: "row",

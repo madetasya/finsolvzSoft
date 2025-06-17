@@ -40,16 +40,39 @@ const BSPLTable: React.FC<BSPLTableProps> = ({ headers, data, selectedYears, lab
         }
     }
 
+    const CNTotalKeyword = [
+        "总计",
+        "合计",
+        "权益总额",
+        "负债和权益总额",
+        "流动资产总额",
+        "非流动资产总额",
+        "资产总额",
+        "短期负债总额",
+        "长期负债总额",
+        "负债总额"
+    ]
+
     const isTotalRow = (text: string | undefined | null) => {
         if (!text) return false
         const lower = text.toString().toLowerCase()
-        return lower.includes("jumlah") || lower.includes("total")
+        return (
+            lower.includes("jumlah") ||
+            lower.includes("total") ||
+            CNTotalKeyword.some((word) => text.includes(word))
+        )
     }
+      
+
 
     const isProfitRow = (text: string | undefined | null) => {
         if (!text) return false
         const lower = text.toString().toLowerCase()
-        return lower.includes("laba") || lower.includes("profit")
+        return (
+            lower.includes("laba") ||
+            lower.includes("profit") ||
+            text.includes("利润")   
+        )
     }
     useEffect(() => {
         if (labelColumnCount === 1 && data.length) {

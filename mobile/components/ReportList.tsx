@@ -72,7 +72,7 @@ const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport
                     Report List
                 </Text>
 
-                {userRole === "SUPER_ADMIN" && (
+                {(userRole === "SUPER_ADMIN" || userRole === "ADMIN") && (
                     <TouchableOpacity
                         style={{
                             backgroundColor: '#E2E4D7',
@@ -97,7 +97,7 @@ const ReportList: React.FC<ReportListProps> = ({ reports, loading, onPressReport
                 position: 'relative',
                 marginBottom: 20,
             }}>
-                {/* Background Image */}
+                {/* BG */}
                 <Image
                     source={require("../assets/image/CardReport.png")}
                     style={{

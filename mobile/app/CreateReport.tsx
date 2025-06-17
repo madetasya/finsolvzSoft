@@ -14,8 +14,6 @@ const CELL_WIDTH = 100;
 const CELL_HEIGHT = 40;
 const defaultHeaders = ["Category", "Subcategory1", "Subcategory2", "Subcategory3"];
 
-
-
 const CreateReportPage = () => {
     const [form, setForm] = useState({
         reportName: "",
@@ -44,15 +42,13 @@ const CreateReportPage = () => {
     const [reportTypes, setReportTypes] = useState<{ _id: string; name: string }[]>([]);
     const [isReportTypeModalVisible, setReportTypeModalVisible] = useState(false);
 
-
-   type CreateReportPageRouteProp = RouteProp<{ params: { reportId?: string } }, 'params'>;
+    type CreateReportPageRouteProp = RouteProp<{ params: { reportId?: string } }, 'params'>;
 
     const route = useRoute<CreateReportPageRouteProp>();
     const reportId = route.params?.reportId;
     const fallbackSelected = { row: jsonData.length - 1, col: jsonHeader.length - 1 };
- 
+
     const handlePickExcel = async (): Promise<void> => {
-        
         const result = await DocumentPicker.getDocumentAsync({
             type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"],
             copyToCacheDirectory: true,
@@ -95,23 +91,22 @@ const CreateReportPage = () => {
         }
     };
 
-
     const updateForm = (field: keyof typeof form, value: string): void => {
         setForm({ ...form, [field]: value });
     };
 
-
     const addRow = (pos: "above" | "below"): void => {
-        const { row } = selectedCell ?? fallbackSelected;
+        const { row } = selectedCell ?? { row: jsonData.length - 1, col: jsonHeader.length - 1 };
         const newRow: string[] = Array(jsonHeader.length).fill("");
         const updated = [...jsonData];
         const idx = pos === "above" ? row : row + 1;
         updated.splice(idx, 0, newRow);
         setJsonData(updated);
+        setSelectedCell({ row: idx, col: 0 });
     };
 
     const addColumn = (pos: "left" | "right"): void => {
-        const { col } = selectedCell ?? fallbackSelected;
+        const { col } = selectedCell ?? { row: jsonData.length - 1, col: jsonHeader.length - 1 };
         const updatedHeader = [...jsonHeader];
         const idx = pos === "left" ? col : col + 1;
         updatedHeader.splice(idx, 0, "");
@@ -122,8 +117,52 @@ const CreateReportPage = () => {
         });
         setJsonHeader(updatedHeader);
         setJsonData(updatedData);
+        setSelectedCell({ row: 0, col: idx });
     };
 
+    const deleteRow = (pos: "above" | "below"): void => {
+        if (!selectedCell) return;
+
+        const { row } = selectedCell;
+
+        if (jsonData.length <= 1) {
+            Alert.alert("NO!", "You can't delete all rows!");
+            return;
+        }
+
+        const idx = pos === "above" ? row : row + 1;
+        const updated = [...jsonData];
+        updated.splice(idx, 1);
+        setJsonData(updated);
+    };
+
+    const deleteColumn = (pos: "left" | "right"): void => {
+        if (!selectedCell) return;
+
+        const { row, col } = selectedCell;
+
+        if (jsonHeader.length <= 1) {
+            Alert.alert("NO!", "You can't delete all columns!");
+            return;
+        }
+
+        const idx = pos === "left" ? col : col + 1;
+        const updatedHeader = [...jsonHeader];
+        updatedHeader.splice(idx, 1);
+
+        const updatedData = jsonData.map((row) => {
+            const newRow = [...row];
+            newRow.splice(idx, 1);
+            return newRow;
+        });
+
+        setJsonHeader(updatedHeader);
+        setJsonData(updatedData);
+    };
+
+    const handleCellSelection = (rowIndex: number, colIndex: number) => {
+        setSelectedCell({ row: rowIndex, col: colIndex });
+    };
     const wrapTextEvery3Words = (text: string): string => {
         const words = text.split(" ");
         let result = "";
@@ -154,37 +193,6 @@ const CreateReportPage = () => {
 
     const charLengths = getMaxCharLengthPerColumn(jsonHeader, jsonData);
 
-
-    const deleteRow = () => {
-        const rowIndex = selectedCell?.row ?? jsonData.length - 1;
-
-        if (jsonData.length <= 1) {
-            Alert.alert("You can't delete all rows!");
-            return;
-        }
-
-        const updated = [...jsonData];
-        updated.splice(rowIndex, 1);
-        setJsonData(updated);
-        setSelectedCell(null);
-    };
-      
-
-    const deleteColumn = () => {
-        if (!selectedCell) return;
-        if (jsonHeader.length <= 1) return Alert.alert("You can't delete all columns!");
-        const updatedHeader = [...jsonHeader];
-        updatedHeader.splice((selectedCell as { col: number }).col, 1);
-        const updatedData = jsonData.map((row) => {
-            const newRow = [...row];
-            newRow.splice((selectedCell as { col: number }).col, 1);
-            return newRow;
-        });
-        setJsonHeader(updatedHeader);
-        setJsonData(updatedData);
-        setSelectedCell(null);
-    };
-
     const saveReport = async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
@@ -204,28 +212,21 @@ const CreateReportPage = () => {
                 reportData: reportData,
             };
 
-            // console.log("THIS IS PAYLOAAADDD >>>>", payload);
-
             if (reportId) {
                 await axios.put(`${API_URL}/reports/${reportId}`, payload, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                // console.log("UPDATE REPORT SUCCESS >>>>");
                 Alert.alert("Success!", "Report updated successfully.");
             } else {
                 await axios.post(`${API_URL}/reports`, payload, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                // console.log("SAVED REPORT WOHOOOO >>>>");
                 Alert.alert("Success!", "Report saved successfully.");
             }
         } catch (err) {
-            // console.log("ERRORR SAVE REPORTTTT >>>>", err);
             Alert.alert("Error", "Failed to save the report.");
         }
     };
-
-
 
 
     const fetchCompanies = async () => {
@@ -247,7 +248,18 @@ const CreateReportPage = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get(`${API_URL}/users`);
+            const token = await AsyncStorage.getItem("authToken");
+            if (!token) {
+                Alert.alert("Oops", "No token found");
+                return;
+            }
+
+            const res = await axios.get(`${API_URL}/users`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
             setUsers(res.data);
         } catch (err) {
             Alert.alert("Something Wrong", "Error fetching user data, try again later.");
@@ -316,9 +328,9 @@ const CreateReportPage = () => {
         setForm({ ...form, userAccess: selectedUserIds });
 
         setUserModalVisible(false);
-    }; 
+    };
     useEffect(() => {
-        
+
         const fetchInitialData = async () => {
             await fetchCompanies();
             await fetchUsers();
@@ -340,14 +352,25 @@ const CreateReportPage = () => {
 
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 } }>
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 }}>
             <View style={styles.header}>
-         
+
                 <Text style={styles.headerTitle}>Report Detail</Text>
             </View>
 
             <View style={styles.formWrap}>
+                <TextInput
+                    placeholder="Report Name"
+                    placeholderTextColor="#aaa"  
+                    value={form.reportName}      
+                    onChangeText={(text) => updateForm("reportName", text)}  
+                    style={styles.inputUnderline}  
+                />
+
                 {Object.keys(form).map((key) => {
+                    if (key === "reportName") {
+                        return null;
+                    }
                     if (key === "reportType") {
                         return (
                             <TouchableOpacity
@@ -512,7 +535,7 @@ const CreateReportPage = () => {
                                         <TouchableOpacity
                                             style={[
                                                 styles.modalItem,
-                                                isSelected && { backgroundColor: "#1B3935" }, 
+                                                isSelected && { backgroundColor: "#1B3935" },
                                             ]}
                                             onPress={() => handleToggleUser(item._id)}
                                         >
@@ -591,32 +614,37 @@ const CreateReportPage = () => {
             </Modal> */}
             <View style={styles.tableWrapper}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.actionRowGrid}>
-                    <TouchableOpacity style={styles.actionButton} onPress={() => addRow("above")}>
-                        <Text style={styles.buttonTextLight}>+ Row Above</Text>
-                    </TouchableOpacity>
+                    <View style={styles.actionRowGrid}>
+                        <TouchableOpacity style={styles.actionButton} onPress={() => addRow("above")}>
+                            <Text style={styles.buttonTextLight}>+ Row Above</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionButton} onPress={() => addRow("below")}>
-                        <Text style={styles.buttonTextLight}>+ Row Below</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionButton} onPress={() => addRow("below")}>
+                            <Text style={styles.buttonTextLight}>+ Row Below</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionButton} onPress={() => addColumn("left")}>
-                        <Text style={styles.buttonTextLight}>+ Col Left</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionButton} onPress={() => addColumn("left")}>
+                            <Text style={styles.buttonTextLight}>+ Col Left</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionButton} onPress={() => addColumn("right")}>
-                        <Text style={styles.buttonTextLight}>+ Col Right</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionButton} onPress={() => addColumn("right")}>
+                            <Text style={styles.buttonTextLight}>+ Col Right</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.deleteButton} onPress={deleteRow}>
-                        <Text style={styles.buttonTextLight}>- Row</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.deleteButton} onPress={() => deleteRow("above")}>
+                            <Text style={styles.buttonTextLight}>- Row Above</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.deleteButton} onPress={deleteColumn}>
-                        <Text style={styles.buttonTextLight}>- Col</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.deleteButton} onPress={() => deleteRow("below")}>
+                            <Text style={styles.buttonTextLight}>- Row Below</Text>
+                        </TouchableOpacity>
 
-                </View>
+                        <TouchableOpacity style={styles.deleteButton} onPress={() => deleteColumn("right")}>
+                            <Text style={styles.buttonTextLight}>- Col Right</Text>
+                        </TouchableOpacity>
+
+
+                    </View>
                 </ScrollView>
 
                 <ScrollView horizontal>
@@ -626,25 +654,10 @@ const CreateReportPage = () => {
                             {jsonHeader.map((header, colIndex) => (
                                 <TouchableOpacity
                                     key={colIndex}
-                                    style={[styles.cell, { width: charLengths[colIndex] * 5 + 24 }]}
-
-                                    onPress={() => setEditingHeaderIndex(colIndex)}
+                                    style={[styles.cell, selectedCell?.col === colIndex && selectedCell?.row === -1 ? styles.selectedCell : {}]} // Highlight selected header
+                                    onPress={() => setSelectedCell({ row: -1, col: colIndex })} // Select header
                                 >
-                                    {editingHeaderIndex === colIndex ? (
-                                        <TextInput
-                                            style={styles.cellInput}
-                                            value={header}
-                                            onChangeText={(text) => {
-                                                const updated = [...jsonHeader];
-                                                updated[colIndex] = text;
-                                                setJsonHeader(updated);
-                                            }}
-                                            onBlur={() => setEditingHeaderIndex(null)}
-                                            autoFocus
-                                        />
-                                    ) : (
-                                        <Text numberOfLines={1}>{header}</Text>
-                                    )}
+                                    <Text>{header}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
@@ -652,35 +665,33 @@ const CreateReportPage = () => {
                         {/* BODY */}
                         {jsonData.map((row, rowIndex) => (
                             <View key={rowIndex} style={styles.row}>
-                                {row.map((cell, colIndex) => {
-                                    const editing = editingCell?.row === rowIndex && editingCell?.col === colIndex;
-                                    return (
-                                        <TouchableOpacity
-                                            key={colIndex}
-                                            style={[styles.cell, { width: charLengths[colIndex] * 5 + 24 }]}
-
-                                            onPress={() => setSelectedCell({ row: rowIndex, col: colIndex })}
-                                            onLongPress={() => setEditingCell({ row: rowIndex, col: colIndex })}
-                                        >
-                                            {editing ? (
-                                                <TextInput
-                                                    style={styles.cellInput}
-                                                    value={cell}
-                                                    onChangeText={(text) => {
-                                                        const updatedData = [...jsonData];
-                                                        updatedData[rowIndex][colIndex] = text;
-                                                        setJsonData(updatedData);
-                                                    }}
-                                                    onBlur={() => setEditingCell(null)}
-                                                    autoFocus
-                                                />
-                                            ) : (
-                                                    <Text>{wrapTextEvery3Words(cell)}</Text>
-
-                                            )}
-                                        </TouchableOpacity>
-                                    );
-                                })}
+                                {row.map((cell, colIndex) => (
+                                    <TouchableOpacity
+                                        key={colIndex}
+                                        style={[
+                                            styles.cell,
+                                            selectedCell?.row === rowIndex && selectedCell?.col === colIndex
+                                                ? styles.selectedCell // Highlight selected cell
+                                                : {}
+                                        ]}
+                                        onPress={() => handleCellSelection(rowIndex, colIndex)} // Select cell on press
+                                    >
+                                        {selectedCell?.row === rowIndex && selectedCell?.col === colIndex ? (
+                                            // Editable input when selected
+                                            <TextInput
+                                                value={cell}
+                                                onChangeText={(text) => {
+                                                    const updatedData = [...jsonData];
+                                                    updatedData[rowIndex][colIndex] = text;
+                                                    setJsonData(updatedData);
+                                                }}
+                                                style={styles.cellInput}
+                                            />
+                                        ) : (
+                                            <Text>{cell}</Text>
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
                             </View>
                         ))}
                     </View>
@@ -697,6 +708,9 @@ const CreateReportPage = () => {
 
 const styles = StyleSheet.create({
     // === General Container ===
+    selectedCell: {
+        backgroundColor: "#c0e0e0", // Light background for selected cell
+    },
     container: {
         flex: 1,
         backgroundColor: "#0D241F",

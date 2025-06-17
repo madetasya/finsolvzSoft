@@ -1,7 +1,9 @@
 function errorWarning(err, req, res, next) {
+  if (res.headersSent) 
+    return next(err); 
+  
   let status = err.status || 500;
   let message = err.message || "Internal Server Error";
-
   switch (err.name) {
     case "Error":
       status = 500;

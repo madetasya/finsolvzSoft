@@ -109,7 +109,18 @@ const BSPLPage: React.FC = () => {
                         <ActivityIndicator size="large" color="#6c918b" style={{ marginTop: 48 }} />
                     ) : (
                         <>
-                            <Text style={styles.title}>{report.reportType?.name}</Text>
+                                <Text style={styles.title}>
+                                    {i18n.language === 'zh'
+                                        ? report.reportType?.name === 'Balance Sheet'
+                                            ? '资产负债表'
+                                            : report.reportType?.name === 'Profit and Loss'
+                                                ? '利润表'
+                                                : report.reportType?.name === 'Revenue'
+                                                    ? '收入'
+                                                    : report.reportType?.name
+                                        : report.reportType?.name}
+                                </Text>
+
                             <Text style={styles.detail}>{report.company?.name}</Text>
                             <Text style={styles.detail}>{report.currency}</Text>
 

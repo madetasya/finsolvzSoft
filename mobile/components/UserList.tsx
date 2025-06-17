@@ -15,6 +15,7 @@ interface UserListProps {
     users: UserItem[];
     onPressUser: (user: UserItem) => void;
     onAddUser: () => void;
+    onDeleteUser: (userId: string) => Promise<void>;
     // onSeeMore: () => void;
     userRole: string | null;
 }

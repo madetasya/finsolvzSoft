@@ -4,8 +4,10 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "resolveJsonModule": true,
-    "jsx": "react",
-    "lib": ["ES2020", "DOM"], 
-    "types": ["react", "react-native"]
+    "jsx": "react-native",
+    "lib": ["ES2020", "DOM"],
+    "types": ["react", "react-native"],
+    "module": "CommonJS",
+    "target": "ESNext"
   }
 }

@@ -1,0 +1,26 @@
+templateFullYear.xlsx
+templateYearOnly.xlsx
+
+# BUILD OUTPUT
+dist
+.expo
+.expo-shared
+
+# DEPENDENCIES & CACHE
+node_modules
+npm-debug.log
+
+# ENV
+.env
+*.tsbuildinfo
+
+# VS CODE JUNK
+.vscode
+
+# TEST
+coverage
+jest-coverage
+
+# TYPINGS
+custom.d.ts
+declarations.d.ts

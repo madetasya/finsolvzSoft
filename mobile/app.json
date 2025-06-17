@@ -24,6 +24,7 @@
       "appVersionSource": "project"
     },
     "android": {
+      "versionCode": 1,
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/image/logoFinsolvz.png",

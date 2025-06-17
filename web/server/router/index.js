@@ -12,10 +12,9 @@ router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
 // UPDATE APP
 router.post("/login", userController.login);
-router.get("/users", userController.getUsers);
-router.get("/latest-version", userController.getLatestVersion);
 
 router.use(authentication);
+router.get("/users", userController.getUsers);
 router.post("/register", userController.register);
 router.post("/logout", userController.logout);
 router.patch("/change-password", userController.changePassword);
@@ -27,7 +26,6 @@ router.get("/users/:id", userController.getUserById);
 router.delete("/users/:id", userController.deleteUser);
 
 // REPORT ROUTES
-// router.post("/reports/import", multer.single("file"), reportController.importExcelReport);
 router.post("/reports", reportController.createReport);
 router.put("/reports/:id", reportController.updateReport);
 router.delete("/reports/:id", reportController.deleteReport);
