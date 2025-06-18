@@ -38,7 +38,7 @@ const RevenuePage: React.FC = () => {
           return;
         }
 
-        const response = await axios.get(`${API_URL}/reports/${reportId}`, {
+        const response = await axios.get(`${API_URL}/api/reports/${reportId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -103,7 +103,7 @@ const RevenuePage: React.FC = () => {
 
     try {
       const token = await AsyncStorage.getItem("authToken");
-      const response = await axios.get(`${API_URL}/reports/reportType/${reportType}`, {
+      const response = await axios.get(`${API_URL}/api/reports/reportType/${reportType}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -133,7 +133,7 @@ const RevenuePage: React.FC = () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("authToken");
-      const response = await axios.get(`${API_URL}/reports/${selectedReport.id}`, {
+      const response = await axios.get(`${API_URL}/api/reports/${selectedReport.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

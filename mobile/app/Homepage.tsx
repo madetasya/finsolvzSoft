@@ -83,7 +83,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
           return;
         }
 
-        const response = await axios.get(`${API_URL}/loginUser`, {
+        const response = await axios.get(`${API_URL}/api/loginUser`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -120,7 +120,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
       const token = await AsyncStorage.getItem("authToken");
       if (!token) return Alert.alert("Oops", "Token missing");
 
-      const userRes = await axios.get(`${API_URL}/loginUser`, {
+      const userRes = await axios.get(`${API_URL}/api/loginUser`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -144,12 +144,12 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
   const fetchReports = async (token: string, role: string, userId: string) => {
     try {
       if (role === "SUPER_ADMIN" || role === "ADMIN") {
-        const response = await axios.get(`${API_URL}/reports`, {
+        const response = await axios.get(`${API_URL}/api/reports`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReports(response.data);
       } else {
-        const response = await axios.get(`${API_URL}/reports/userAccess/${userId}`, {
+        const response = await axios.get(`${API_URL}/api/reports/userAccess/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReports(response.data);
@@ -170,7 +170,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
     }
 
     try {
-      await axios.delete(`${API_URL}/reports/${reportId}`, {
+      await axios.delete(`${API_URL}/api/reports/${reportId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (error) {
@@ -211,7 +211,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
   const getUsers = async (token: string) => {
     try {
-      const response = await axios.get(`${API_URL}/users`, {
+      const response = await axios.get(`${API_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -248,7 +248,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
       }
 
       if (editingUserId) {
-        await axios.put(`${API_URL}/updateUser/${editingUserId}`, payload, {
+        await axios.put(`${API_URL}/api/updateUser/${editingUserId}`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -259,7 +259,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
           Alert.alert("Success", "User updated successfully!");
         }, 300);
       } else {
-        await axios.post(`${API_URL}/register`, payload, {
+        await axios.post(`${API_URL}/api/register`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -293,7 +293,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
         return;
       }
 
-      await axios.delete(`${API_URL}/users/${userId}`, {
+      await axios.delete(`${API_URL}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -310,7 +310,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
   const fetchCompanies = async (token: string) => {
     try {
-      const response = await axios.get(`${API_URL}/company`, {
+      const response = await axios.get(`${API_URL}/api/company`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCompanies(response.data);
@@ -343,7 +343,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
         ? (company._id as { $oid: string }).$oid
         : company._id;
 
-      const res = await axios.get(`${API_URL}/company/${realId}`, {
+      const res = await axios.get(`${API_URL}/api/company/${realId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -376,13 +376,13 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 
       if (editingCompanyId) {
         // EDIT
-        await axios.put(`${API_URL}/company/${editingCompanyId}`, payload, {
+        await axios.put(`${API_URL}/api/company/${editingCompanyId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         Alert.alert("Success", "Company updated successfully");
       } else {
         // CREATE
-        await axios.post(`${API_URL}/company`, payload, {
+        await axios.post(`${API_URL}/api/company`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         Alert.alert("Success", "Company created successfully");
@@ -558,7 +558,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
                   try {
                     const token = await AsyncStorage.getItem("authToken");
                     if (!token) return;
-                    await axios.delete(`${API_URL}/company/${editingCompanyId}`, {
+                    await axios.delete(`${API_URL}/api/company/${editingCompanyId}`, {
                       headers: { Authorization: `Bearer ${token}` },
                     });
                     Alert.alert("Deleted", "Company deleted!");
@@ -704,7 +704,7 @@ const HomePage: React.FC<{ navigation: any; route: any }> = ({ navigation, route
                     try {
                       const token = await AsyncStorage.getItem("authToken");
                       if (!token) return;
-                      await axios.delete(`${API_URL}/users/${editingUserId}`, {
+                      await axios.delete(`${API_URL}/api/users/${editingUserId}`, {
 
                         headers: { Authorization: `Bearer ${token}` },
                       });

@@ -47,7 +47,7 @@ const HomePage: React.FC<{ navigation: any }> = ({ navigation }) => {
                 if (lang) i18n.changeLanguage(lang);
                 if (!token) return;
 
-                const response = await axios.get(`${API_URL}/loginUser`, {
+                const response = await axios.get(`${API_URL}/api/loginUser`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setUser(response.data)

@@ -45,7 +45,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCompany, reportType }
         return;
       }
 
-      const response = await axios.get(`${API_URL}/reports/company/${selectedCompany}`, {
+      const response = await axios.get(`${API_URL}/api/reports/company/${selectedCompany}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

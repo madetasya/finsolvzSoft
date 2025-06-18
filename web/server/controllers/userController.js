@@ -136,9 +136,7 @@ const logout = async (req, res) => {
       throw { name: "NotFound", message: "User not found" };
     }
 
-    user.tokens = user.tokens.filter((t) => t.token !== token);
     await user.save();
-
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     next(error);

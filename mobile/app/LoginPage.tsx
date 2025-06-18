@@ -221,7 +221,7 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/login`, { email, password })
+      const response = await axios.post(`${API_URL}/api/login`, { email, password })
       const { access_token } = response.data
 
       if (access_token) {
@@ -257,7 +257,7 @@ const LoginPage: React.FC = () => {
     setOtpLoading(true)
 
     try {
-      const response = await axios.post(`${API_URL}/forgot-password`, {
+      const response = await axios.post(`${API_URL}/api/forgot-password`, {
         email: otpEmail,
       })
       setOtpMessageType('info')

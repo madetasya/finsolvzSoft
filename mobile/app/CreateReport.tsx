@@ -80,7 +80,7 @@ const CreateReportPage = () => {
                 Alert.alert("Oops", "Something went wrong, try again later.");
                 return;
             }
-            const res = await axios.get(`${API_URL}/reportTypes`, {
+            const res = await axios.get(`${API_URL}/api/reportTypes`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -213,12 +213,12 @@ const CreateReportPage = () => {
             };
 
             if (reportId) {
-                await axios.put(`${API_URL}/reports/${reportId}`, payload, {
+                await axios.put(`${API_URL}/api/reports/${reportId}`, payload, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 Alert.alert("Success!", "Report updated successfully.");
             } else {
-                await axios.post(`${API_URL}/reports`, payload, {
+                await axios.post(`${API_URL}/api/reports`, payload, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 Alert.alert("Success!", "Report saved successfully.");
@@ -237,7 +237,7 @@ const CreateReportPage = () => {
                 return;
             }
 
-            const res = await axios.get(`${API_URL}/company`, {
+            const res = await axios.get(`${API_URL}/api/company`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setCompanies(res.data);
@@ -254,7 +254,7 @@ const CreateReportPage = () => {
                 return;
             }
 
-            const res = await axios.get(`${API_URL}/users`, {
+            const res = await axios.get(`${API_URL}/api/users`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -273,7 +273,7 @@ const CreateReportPage = () => {
                 Alert.alert("Oops", "Something went wrong, try again later.");
                 return;
             }
-            const res = await axios.get(`${API_URL}/reports/${id}`, {
+            const res = await axios.get(`${API_URL}/api/reports/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

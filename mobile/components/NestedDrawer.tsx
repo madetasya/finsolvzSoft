@@ -22,7 +22,7 @@ export default function NestedDrawer({ reportId }: NestedDrawerProps) {
             try {
                 const token = await AsyncStorage.getItem("authToken")
                 if (!token) return
-                const res = await axios.get(`${API_URL}/reports/${reportId}`, {
+                const res = await axios.get(`${API_URL}/api/reports/${reportId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                 setHeader(res.data.reportData.jsonHeader)

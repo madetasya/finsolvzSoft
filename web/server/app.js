@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", routes);
+app.use("/api", routes);
 app.use(errorWarning);
 
 const greeting = process.env.GREETING;

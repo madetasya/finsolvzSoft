@@ -51,7 +51,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             const token = await AsyncStorage.getItem('authToken')
             if (!token) throw new Error('No token')
 
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/change-password`, {
+            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/change-password`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

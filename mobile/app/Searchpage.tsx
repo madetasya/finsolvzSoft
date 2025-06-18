@@ -32,7 +32,7 @@ const SearchPage = ({ navigation }: any) => {
                 const token = await AsyncStorage.getItem("authToken");
                 if (!token) return;
 
-                const userRes = await axios.get(`${API_URL}/loginUser`, {
+                const userRes = await axios.get(`${API_URL}/api/loginUser`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -41,24 +41,24 @@ const SearchPage = ({ navigation }: any) => {
 
                 if (userRes.data.role === "SUPER_ADMIN") {
                     const [allReports, allUsers, allCompanies] = await Promise.all([
-                        axios.get(`${API_URL}/reports`, { headers: { Authorization: `Bearer ${token}` } }),
-                        axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } }),
-                        axios.get(`${API_URL}/company`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/reports`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/users`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/company`, { headers: { Authorization: `Bearer ${token}` } }),
                     ]);
                     setReports(allReports.data);
                     setUsers(allUsers.data);
                     setCompanies(allCompanies.data);
                 } else if (userRes.data.role === "ADMIN") {
                     const [userReports, createdReports, allUsers, allCompanies] = await Promise.all([
-                        axios.get(`${API_URL}/reports/userAccess/${userRes.data._id}`, { headers: { Authorization: `Bearer ${token}` } }),
-                        axios.get(`${API_URL}/reports/createdBy/${userRes.data._id}`, { headers: { Authorization: `Bearer ${token}` } }),
-                        axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } }),
-                        axios.get(`${API_URL}/company`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/reports/userAccess/${userRes.data._id}`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/reports/createdBy/${userRes.data._id}`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/users`, { headers: { Authorization: `Bearer ${token}` } }),
+                        axios.get(`${API_URL}/api/company`, { headers: { Authorization: `Bearer ${token}` } }),
                     ]);
                     setReports([...userReports.data, ...createdReports.data]);
                     setUsers(allUsers.data);
                 } else if (userRes.data.role === "CLIENT") {
-                    const userCompaniesRes = await axios.get(`${API_URL}/user/companies`, {
+                    const userCompaniesRes = await axios.get(`${API_URL}/api/user/companies`, {
                         headers: { Authorization: `Bearer ${token}` },
                     })
 
@@ -67,7 +67,7 @@ const SearchPage = ({ navigation }: any) => {
                     const companyIds = userCompanies.map((c: any) => c._id)
 
                     const reportsPromises = companyIds.map((id: string) =>
-                        axios.get(`${API_URL}/reports/company/${id}`, {
+                        axios.get(`${API_URL}/api/reports/company/${id}`, {
                             headers: { Authorization: `Bearer ${token}` },
                         })
                     )
@@ -169,12 +169,20 @@ const SearchPage = ({ navigation }: any) => {
                     borderColor: '#1B3935',
                     borderRadius: 32,
                     marginBottom: 20,
+                    
                 }}
                 inputStyle={{
                     color: "#E2E4D7",
                     fontFamily: searchQuery.length > 0 ? 'UbuntuRegular' : 'UbuntuLightItalic',
                 }}
                 iconColor="#E2E4D7"
+                theme={{
+                    colors: {
+                        text: "#E2E4D7", // teks input
+                        placeholder: "#FFFFFF", // placeholder putih
+                        primary: "#E2E4D7", 
+                    }
+                  }}
             />
 
             {loading ? (
@@ -185,7 +193,7 @@ const SearchPage = ({ navigation }: any) => {
                         <>
                             {userRole !== "CLIENT" && filteredUsers.length > 0 && (
                                 <>
-                                        <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginBottom: 8, fontSize: 16, letterSpacing: 1.8, }}>{t("USERS")}</Text>
+                                    <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginBottom: 8, fontSize: 16, letterSpacing: 1.8, }}>{t("USERS")}</Text>
                                     {filteredUsers.map((user) => (
                                         <View key={user._id} style={{ marginBottom: 8 }}>
                                             <TouchableOpacity onPress={() => handlePressUser(user)}>
@@ -199,7 +207,7 @@ const SearchPage = ({ navigation }: any) => {
 
                             {filteredReports.length > 0 && (
                                 <>
-                                        <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>{t("REPORTS")}</Text>
+                                    <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>{t("REPORTS")}</Text>
                                     {filteredReports.map((report) => (
                                         <View key={report._id} style={{ marginBottom: 8 }}>
                                             <TouchableOpacity onPress={() => handlePressReport(report)}>
@@ -213,7 +221,7 @@ const SearchPage = ({ navigation }: any) => {
 
                             {userRole !== "CLIENT" && filteredCompanies.length > 0 && (
                                 <>
-                                        <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>{t("COMPANIES")}</Text>
+                                    <Text style={{ color: '#E2E4D7', fontFamily: 'UbuntuBold', marginTop: 16, marginBottom: 8, letterSpacing: 1.8, }}>{t("COMPANIES")}</Text>
                                     {filteredCompanies.map((company) => (
                                         <TouchableOpacity key={company._id} onPress={() => handlePressCompany(company)}>
                                             <Text style={{ color: '#E2E4D7', marginBottom: 4, fontFamily: 'UbuntuMedium' }}>{company.name}</Text>

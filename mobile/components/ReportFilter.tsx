@@ -42,7 +42,7 @@ const ReportFilter: React.FC<ReportFilterProps> = ({ onFilterChange }): JSX.Elem
         return;
       }
 
-      const response = await axios.get(`${API_URL}/user/companies`, {
+      const response = await axios.get(`${API_URL}/api/user/companies`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -60,7 +60,7 @@ const fetchReportTypes = async (companyId: string) => {
       const token = await AsyncStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await axios.get(`${API_URL}/reports/company/${companyId}`, {
+      const response = await axios.get(`${API_URL}/api/reports/company/${companyId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

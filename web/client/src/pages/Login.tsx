@@ -24,7 +24,7 @@ const Login: React.FC = () => {
         setErrorMessage("Please fill up all fields");
         return;
       }
-      const response = await axios.post(`${API_URL}/login`, { email, password });
+      const response = await axios.post(`${API_URL}/api/login`, { email, password });
 
       localStorage.setItem("token", response.data.access_token);
       setErrorMessage("Error Login");
@@ -46,7 +46,7 @@ const Login: React.FC = () => {
 
   const handleForgotPassword = async () => {
     try {
-      const response = await axios.post(`${API_URL}/forgot-password`, { email: resetEmail });
+      const response = await axios.post(`${API_URL}/api/forgot-password`, { email: resetEmail });
 
       setResetMessage(response.data.message);
     } catch {
